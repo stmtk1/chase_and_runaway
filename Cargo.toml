@@ -1,0 +1,7 @@
+[package]
+name = "life"
+version = "0.1.0"
+authors = ["stmtk1 <13043069@gakushuin.ac.jp>"]
+
+[dependencies]
+piston_window = "0.81.0"
