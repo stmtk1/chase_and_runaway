@@ -5,3 +5,4 @@ authors = ["stmtk1 <13043069@gakushuin.ac.jp>"]
 
 [dependencies]
 piston_window = "0.81.0"
+rand="0.6.1"
