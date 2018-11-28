@@ -16,24 +16,24 @@ use graphics::polygon;
 struct Animal {
     x: f64,
     y: f64,
-    vx: f64,
-    vy: f64,
+    velocity: f64,
+    direction: f64,
 }
 
 #[derive(Clone)]
 struct Cat{
     x: f64,
     y: f64,
-    vx: f64,
-    vy: f64,
+    velocity: f64,
+    direction: f64,
 }
 
 #[derive(Clone)]
 struct Rat{
     x: f64,
     y: f64,
-    vx: f64,
-    vy: f64,
+    velocity: f64,
+    direction: f64,
 }
 
 trait AnimalTrait {
@@ -45,17 +45,36 @@ impl Animal{
         (a1.x - a2.x) * (a1.x - a2.x) + (a1.y - a2.y) * (a1.y - a2.y)
     }
     
-    fn move_self(&mut self) {
-        self.x += self.vx;
-        self.y += self.vy;
+    fn move_self(&mut self, width: f64, height: f64) {
+        self.x += self.velocity * self.direction.cos();
+        self.y += self.velocity * self.direction.sin();
+        
+        if self.x > width {
+            self.x -= width;
+        }
+        
+        if self.x < 0.0 {
+            self.x += width;
+        }
+        
+        if self.y > height {
+            self.y -= height;
+        }
+        
+        if self.y < 0.0 {
+            self.y += height;
+        }
     }
     
     fn as_cat(&self) -> Cat {
-        Cat{x: self.x, y: self.y, vx: self.vx, vy: self.vy }
+        Cat{x: self.x, y: self.y, velocity: self.velocity, direction: self.direction }
     }
     
     fn as_rat(&self) -> Rat {
-        Rat{x: self.x, y: self.y, vx: self.vx, vy: self.vy }
+        Rat{x: self.x, y: self.y, velocity: self.velocity, direction: self.direction }
+    }
+    
+    fn find_near(&self, others: Vec<Animal>){
     }
 }
 
@@ -65,9 +84,7 @@ impl Cat{
         let x: f64 = rng.gen::<f64>() * width;
         let y: f64 = rng.gen::<f64>() * height;
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        let vx: f64 = theta.cos();
-        let vy: f64 = theta.sin();
-        Cat{ x: x, y: y, vx: vx, vy: vy }
+        Cat{ x: x, y: y, velocity: 0.5, direction: theta }
     }
 }
 
@@ -77,21 +94,19 @@ impl Rat{
         let x: f64 = rng.gen::<f64>() * width;
         let y: f64 = rng.gen::<f64>() * height;
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        let vx: f64 = theta.cos();
-        let vy: f64 = theta.sin();
-        Rat{ x: x, y: y, vx: vx, vy: vy }
+        Rat{ x: x, y: y, velocity: 0.5, direction: theta }
     }
 }
 
 impl AnimalTrait for Cat {
     fn as_animal(&self) -> Animal {
-        Animal {x: self.x, y: self.y, vx: self.vx, vy: self.vy }
+        Animal {x: self.x, y: self.y, velocity: self.velocity, direction: self.direction }
     }
 }
 
 impl AnimalTrait for Rat {
     fn as_animal(&self) -> Animal {
-        Animal {x: self.x, y: self.y, vx: self.vx, vy: self.vy }
+        Animal {x: self.x, y: self.y, velocity: self.velocity, direction: self.direction }
     }
 }
 
@@ -135,12 +150,12 @@ impl App {
         });
     }
 
-    fn update(&mut self, args: &UpdateArgs) {
+    fn update(&mut self, width: f64, height: f64) {
         let cats = &self.cats.clone();
         let mut new_cats: Vec<Cat> = Vec::with_capacity(cats.len());
         for cat in cats {
             let mut animal = cat.as_animal();
-            animal.move_self();
+            animal.move_self(width, height);
             new_cats.push(animal.as_cat());
         }
         self.cats = new_cats;
@@ -149,7 +164,7 @@ impl App {
         let mut new_rats: Vec<Rat> = Vec::with_capacity(rats.len());
         for rat in rats {
             let mut animal = rat.as_animal();
-            animal.move_self();
+            animal.move_self(width, height);
             new_rats.push(animal.as_rat());
         }
         self.rats = new_rats;
@@ -188,12 +203,28 @@ fn main(){
     let mut events = Events::new(EventSettings::new());
     
     while let Some(e) = events.next(&mut window) {
+        let mut width = 0.0;
+        let mut height = 0.0;
         if let Some(r) = e.render_args(){ 
             app.render(&r);
+            width = r.width as f64;
+            height = r.height as f64;
         }
         
         if let Some(u) = e.update_args() {
-            app.update(&u);
+            app.update(width, height);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests{
+    use super::Animal;
+    
+    #[test]
+    fn distant_calculation_test(){
+        let a1 = Animal { x: 0.0, y: 0.0, velocity: 0.0, direction: 0.0 };
+        let a2 = Animal { x: 3.0, y: 4.0, velocity: 0.0, direction: 0.0 };
+        assert_eq!(Animal::dist(a1, a2), 25.0);
     }
 }
