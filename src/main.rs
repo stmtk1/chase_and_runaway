@@ -12,6 +12,9 @@ use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
 use graphics::polygon;
 
+const WIDTH: f64 = 640.0;
+const HEIGHT: f64 = 480.0;
+
 #[derive(Clone)]
 struct Animal {
     x: f64,
@@ -45,24 +48,24 @@ impl Animal{
         (a1.x - a2.x) * (a1.x - a2.x) + (a1.y - a2.y) * (a1.y - a2.y)
     }
     
-    fn move_self(&mut self, width: f64, height: f64) {
+    fn move_self(&mut self) {
         self.x += self.velocity * self.direction.cos();
         self.y += self.velocity * self.direction.sin();
         
-        if self.x > width {
-            self.x -= width;
+        if self.x > WIDTH {
+            self.x -= WIDTH;
         }
         
         if self.x < 0.0 {
-            self.x += width;
+            self.x += WIDTH;
         }
         
-        if self.y > height {
-            self.y -= height;
+        if self.y > HEIGHT {
+            self.y -= HEIGHT;
         }
         
         if self.y < 0.0 {
-            self.y += height;
+            self.y += HEIGHT;
         }
     }
     
@@ -79,20 +82,20 @@ impl Animal{
 }
 
 impl Cat{
-    fn new(width: f64, height: f64) -> Cat{
+    fn new() -> Cat{
         let mut rng = rand::thread_rng();
-        let x: f64 = rng.gen::<f64>() * width;
-        let y: f64 = rng.gen::<f64>() * height;
+        let x: f64 = rng.gen::<f64>() * WIDTH;
+        let y: f64 = rng.gen::<f64>() * HEIGHT;
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
         Cat{ x: x, y: y, velocity: 0.5, direction: theta }
     }
 }
 
 impl Rat{
-    fn new(width: f64, height: f64) -> Rat {
+    fn new() -> Rat {
         let mut rng = rand::thread_rng();
-        let x: f64 = rng.gen::<f64>() * width;
-        let y: f64 = rng.gen::<f64>() * height;
+        let x: f64 = rng.gen::<f64>() * WIDTH;
+        let y: f64 = rng.gen::<f64>() * HEIGHT;
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
         Rat{ x: x, y: y, velocity: 0.5, direction: theta }
     }
@@ -127,7 +130,6 @@ impl App {
         //const TRIANGLE:   &[[f32; 2]; 3] = &[[1.0, 0.0], [0.0, 1.732], [2.0, 1.732]];
 
         let square = rectangle::square(0.0, 0.0, 5.0);
-        let (x, y) = (args.width / 2.0, args.height / 2.0);
         let cats = &self.cats;
         let rats = &self.rats;
 
@@ -150,12 +152,12 @@ impl App {
         });
     }
 
-    fn update(&mut self, width: f64, height: f64) {
+    fn update(&mut self) {
         let cats = &self.cats.clone();
         let mut new_cats: Vec<Cat> = Vec::with_capacity(cats.len());
         for cat in cats {
             let mut animal = cat.as_animal();
-            animal.move_self(width, height);
+            animal.move_self();
             new_cats.push(animal.as_cat());
         }
         self.cats = new_cats;
@@ -164,7 +166,7 @@ impl App {
         let mut new_rats: Vec<Rat> = Vec::with_capacity(rats.len());
         for rat in rats {
             let mut animal = rat.as_animal();
-            animal.move_self(width, height);
+            animal.move_self();
             new_rats.push(animal.as_rat());
         }
         self.rats = new_rats;
@@ -173,11 +175,9 @@ impl App {
 
 fn main(){
     let opengl = OpenGL::V3_2;
-    let width: f64 = 640.0;
-    let height: f64 = 480.0;
     let mut window: Window = WindowSettings::new(
         "spinning-square",
-        [width as u32, height as u32]
+        [WIDTH as u32, HEIGHT as u32]
         )
         .opengl(opengl)
         .exit_on_esc(true)
@@ -186,12 +186,12 @@ fn main(){
     
     let mut cats: Vec<Cat> = Vec::with_capacity(100);
     for _ in 0..100 {
-        cats.push(Cat::new(width, height));
+        cats.push(Cat::new());
     }
     
     let mut rats: Vec<Rat> = Vec::with_capacity(100);
     for _ in 0..100 {
-        rats.push(Rat::new(width, height));
+        rats.push(Rat::new());
     }
     
     let mut app = App {
@@ -203,16 +203,12 @@ fn main(){
     let mut events = Events::new(EventSettings::new());
     
     while let Some(e) = events.next(&mut window) {
-        let mut width = 0.0;
-        let mut height = 0.0;
         if let Some(r) = e.render_args(){ 
             app.render(&r);
-            width = r.width as f64;
-            height = r.height as f64;
         }
         
         if let Some(u) = e.update_args() {
-            app.update(width, height);
+            app.update();
         }
     }
 }
