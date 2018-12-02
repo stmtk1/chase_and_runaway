@@ -23,6 +23,53 @@ struct Animal {
     direction: f64,
 }
 
+#[derive(Clone)]
+struct PVector {
+    x: f64,
+    y: f64,
+}
+
+impl PVector {
+    fn len(&self) -> f64 {
+        self.x * self.x + self.y * self.y
+    }
+
+    fn offset_x(self_x: f64, other_x: f64) -> f64 {
+        let dist_x = other_x - self_x;
+        // self_x < other_x => dist_x > 0
+        if self_x < other_x && dist_x < WIDTH - dist_x {
+            dist_x
+        } else if self_x < other_x {
+            dist_x - WIDTH
+        } else if WIDTH - dist_x < dist_x {
+            dist_x
+        } else {
+            WIDTH + dist_x
+        }
+    }
+    
+    fn offset_y(self_y: f64, other_y: f64) -> f64 {
+        let dist_y = other_y - self_y;
+        
+        if self_y < other_y && dist_y < HEIGHT - dist_y {
+            dist_y
+        } else if self_y < other_y {
+            dist_y - HEIGHT
+        } else if HEIGHT - dist_y < dist_y {
+            dist_y
+        } else {
+            HEIGHT + dist_y
+        }
+    }
+    
+    fn offset(&self, other: PVector) -> PVector {
+        PVector {
+            x: PVector::offset_x(self.x, other.x), 
+            y: PVector::offset_y(self.y, other.y) 
+        }
+    }
+}
+
 impl Animal{
     fn new() -> Animal{
         let mut rng = rand::thread_rng();
@@ -32,8 +79,15 @@ impl Animal{
         Animal{ x: x, y: y, velocity: 0.5, direction: theta }
     }
     
-    fn dist(a1: Animal, a2: Animal) -> f64 {
-        (a1.x - a2.x) * (a1.x - a2.x) + (a1.y - a2.y) * (a1.y - a2.y)
+    fn offset(&self, other:Animal) -> PVector {
+        let self_vec = PVector { x: self.x, y: self.y };
+        let other_vec = PVector { x: other.x, y: other.y };
+        self_vec.offset(other_vec)
+    }
+        
+    
+    fn dist(&self, other: Animal) -> f64 {
+        self.offset(other).len()
     }
     
     fn move_self(&self) -> Animal {
@@ -63,6 +117,9 @@ impl Animal{
             direction: self.direction
         }
     }
+    
+    
+    
     
     fn find_near(&self, others: Vec<Animal>){
     }
@@ -98,7 +155,7 @@ impl App {
                 //polygon(RED, &TRIANGLE, transform, gl);
             }
             
-            for rat in rats{
+            for rat in rats {
                 let transform = c.transform
                     .trans(rat.x, rat.y);
                 rectangle(BLUE, square, transform, gl);
@@ -172,6 +229,6 @@ mod tests{
     fn distant_calculation_test(){
         let a1 = Animal { x: 0.0, y: 0.0, velocity: 0.0, direction: 0.0 };
         let a2 = Animal { x: 3.0, y: 4.0, velocity: 0.0, direction: 0.0 };
-        assert_eq!(Animal::dist(a1, a2), 25.0);
+        assert_eq!(a1.dist(a2), 25.0);
     }
 }
