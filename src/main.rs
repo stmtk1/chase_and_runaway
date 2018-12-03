@@ -68,6 +68,16 @@ impl PVector {
             y: PVector::offset_y(self.y, other.y) 
         }
     }
+    
+    fn find_near(&self, others: Vec<PVector>, r: f64) -> Vec<PVector> {
+        let mut ret: Vec<PVector>= Vec::with_capacity(others.len());
+        for other in others {
+            if(other.len() < r * r){
+                ret.push(other);
+            }
+        }
+        ret
+    }
 }
 
 impl Animal{
@@ -118,11 +128,6 @@ impl Animal{
         }
     }
     
-    
-    
-    
-    fn find_near(&self, others: Vec<Animal>){
-    }
 }
 
 // #[derive(Clone)]
@@ -224,11 +229,28 @@ fn main(){
 #[cfg(test)]
 mod tests{
     use super::Animal;
+    use super::PVector;
     
     #[test]
     fn distant_calculation_test(){
         let a1 = Animal { x: 0.0, y: 0.0, velocity: 0.0, direction: 0.0 };
         let a2 = Animal { x: 3.0, y: 4.0, velocity: 0.0, direction: 0.0 };
         assert_eq!(a1.dist(a2), 25.0);
+    }
+    
+    #[test]
+    fn find_near_test(){
+        let v1 = PVector { x: 0.0, y: 0.0 };
+        let v2 = PVector { x: 1.0, y: 2.0 };
+        let v3 = PVector { x: 3.0, y: 3.0 };
+        let mut vec: Vec<PVector> = Vec::with_capacity(100);
+        for _ in 0..90 {
+            vec.push(v2.clone());
+        }
+        
+        for _ in 0..10 {
+            vec.push(v3.clone());
+        }
+        assert_eq!(v1.find_near(vec, 3.0).len(), 90);
     }
 }
