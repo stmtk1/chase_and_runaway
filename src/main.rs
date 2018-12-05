@@ -31,7 +31,7 @@ struct PVector {
 
 impl PVector {
     fn len(&self) -> f64 {
-        self.x * self.x + self.y * self.y
+        (self.x * self.x + self.y * self.y).sqrt()
     }
 
     fn offset_x(self_x: f64, other_x: f64) -> f64 {
@@ -41,7 +41,7 @@ impl PVector {
             dist_x
         } else if self_x < other_x {
             dist_x - WIDTH
-        } else if WIDTH - dist_x < dist_x {
+        } else if -WIDTH - dist_x < dist_x {
             dist_x
         } else {
             WIDTH + dist_x
@@ -55,7 +55,7 @@ impl PVector {
             dist_y
         } else if self_y < other_y {
             dist_y - HEIGHT
-        } else if HEIGHT - dist_y < dist_y {
+        } else if -HEIGHT - dist_y < dist_y {
             dist_y
         } else {
             HEIGHT + dist_y
@@ -70,14 +70,52 @@ impl PVector {
     }
     
     fn find_near(&self, others: Vec<PVector>, r: f64) -> Vec<PVector> {
+        //println!("{}", others[0].(self));
         let mut ret: Vec<PVector>= Vec::with_capacity(others.len());
         for other in others {
-            if(other.len() < r * r){
+            if other.len() < r {
                 ret.push(other);
             }
         }
         ret
     }
+
+    fn add(&self, other: PVector) -> PVector {
+        PVector{
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+    
+    fn add_all(vectors: Vec<PVector>) -> PVector {
+        let mut ret = PVector{ x: 0.0, y: 0.0 };
+        for vec in vectors {
+            ret = ret.add(vec);
+        }
+        ret
+    }
+    
+    fn direction(&self) -> f64 {
+            self.x.atan2(self.y)
+    }
+    
+    /*
+    
+    fn normalize(&self) -> PVector {
+        let size = self.len();
+        PVector{
+            x: self.x / size,
+            y: self.y / size,
+        }
+    }
+    
+    fn mult(&self, scalar: f64) -> PVector {
+        PVector {
+            x: self.x * scalar,
+            y: self.y * scalar,
+        }
+    }
+    */
 }
 
 impl Animal{
@@ -87,6 +125,18 @@ impl Animal{
         let y: f64 = rng.gen::<f64>() * HEIGHT;
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
         Animal{ x: x, y: y, velocity: 0.5, direction: theta }
+    }
+    
+    fn new2() -> Animal{
+        let mut rng = rand::thread_rng();
+        let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
+        Animal{ x: WIDTH / 2.0 - 10.0, y: HEIGHT / 2.0, velocity: 0.5, direction: 0.0 }
+    }
+    
+    fn new3() -> Animal{
+        let mut rng = rand::thread_rng();
+        let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
+        Animal{ x: WIDTH / 2.0, y: HEIGHT / 2.0, velocity: 0.5, direction: theta }
     }
     
     fn offset(&self, other:Animal) -> PVector {
@@ -128,6 +178,34 @@ impl Animal{
         }
     }
     
+    fn as_pvector(&self) -> PVector {
+        PVector{
+            x: self.x,
+            y: self.y,
+        }
+    }
+    
+    fn to_pvectors(animals: Vec<Animal>) -> Vec<PVector> {
+        let mut animal_vec: Vec<PVector> = Vec::with_capacity(animals.len());
+        for animal in animals {
+            animal_vec.push(animal.as_pvector());
+        }
+        animal_vec
+    }
+    
+    fn chase(&self, preyers: Vec<Animal>) -> Animal {
+        let near_preyer = self
+            .as_pvector()
+            .find_near(Animal::to_pvectors(preyers), 50.0);
+        println!("{}", near_preyer.len());
+        //self.direction = PVector::add_all(near_preyer).direction();
+        Animal {
+            x: self.x,
+            y: self.y,
+            velocity: self.velocity,
+            direction: -PVector::add_all(near_preyer).direction(),
+        }
+    }
 }
 
 // #[derive(Clone)]
@@ -173,11 +251,11 @@ impl App {
         let cats = &self.cats.clone();
         let mut new_cats: Vec<Animal> = Vec::with_capacity(cats.len());
         for cat in cats {
-            new_cats.push(cat.move_self());
+            new_cats.push(cat.chase(self.rats.clone()).move_self());
         }
         self.cats = new_cats;
-        
         let rats = &self.rats.clone();
+        
         let mut new_rats: Vec<Animal> = Vec::with_capacity(rats.len());
         for rat in rats {
             new_rats.push(rat.move_self());
@@ -187,6 +265,7 @@ impl App {
 }
 
 fn main(){
+    /*
     let opengl = OpenGL::V3_2;
     let mut window: Window = WindowSettings::new(
         "spinning-square",
@@ -198,13 +277,13 @@ fn main(){
         .unwrap();
     
     let mut cats: Vec<Animal> = Vec::with_capacity(100);
-    for _ in 0..100 {
-        cats.push(Animal::new());
+    for _ in 0..1 {
+        cats.push(Animal::new3());
     }
     
     let mut rats: Vec<Animal> = Vec::with_capacity(100);
     for _ in 0..100 {
-        rats.push(Animal::new());
+        rats.push(Animal::new2());
     }
     
     let mut app = App {
@@ -224,6 +303,8 @@ fn main(){
             app.update();
         }
     }
+    */
+    println!("{}", Animal::new2().dist(Animal::new3()));
 }
 
 #[cfg(test)]
@@ -235,7 +316,7 @@ mod tests{
     fn distant_calculation_test(){
         let a1 = Animal { x: 0.0, y: 0.0, velocity: 0.0, direction: 0.0 };
         let a2 = Animal { x: 3.0, y: 4.0, velocity: 0.0, direction: 0.0 };
-        assert_eq!(a1.dist(a2), 25.0);
+        assert_eq!(a1.dist(a2), 5.0);
     }
     
     #[test]
@@ -253,4 +334,52 @@ mod tests{
         }
         assert_eq!(v1.find_near(vec, 3.0).len(), 90);
     }
+    
+    #[test]
+    fn find_near_test2(){
+        let v1 = PVector { x: 0.0, y: 0.0 };
+        let v2 = PVector { x: -1.0, y: 2.0 };
+        let v3 = PVector { x: -3.0, y: -3.0 };
+        let mut vec: Vec<PVector> = Vec::with_capacity(100);
+        for _ in 0..90 {
+            vec.push(v2.clone());
+        }
+        
+        for _ in 0..10 {
+            vec.push(v3.clone());
+        }
+        assert_eq!(v1.find_near(vec, 3.0).len(), 90);
+    }
+
+    #[test]
+    fn add_test(){
+        let v1 = PVector { x: 1.0, y: 2.0 };
+        let v2 = PVector { x: 3.0, y: 3.0 };
+        let v3 = v1.add(v2);
+        assert_eq!(v3.x, 4.0);
+        assert_eq!(v3.y, 5.0);
+    }
+    
+    #[test]
+    fn add_all_test(){
+        let mut vec:Vec<PVector> = Vec::with_capacity(5);
+        vec.push(PVector { x: 1.0, y: 1.0 });
+        vec.push(PVector { x: 2.0, y: 1.0 });
+        vec.push(PVector { x: 3.0, y: 2.0 });
+        vec.push(PVector { x: 4.0, y: 3.0 });
+        vec.push(PVector { x: 5.0, y: 5.0 });
+        let ret = PVector::add_all(vec);
+        assert_eq!(ret.x, 15.0);
+        assert_eq!(ret.y, 12.0);
+    }
+    
+    /*
+    #[test]
+    fn mult_test(){
+        let v1 = PVector { x: 1.0, y: 2.0 };
+        let v2 = v1.mult(3.0);
+        assert_eq!(v2.x, 3.0);
+        assert_eq!(v2.y, 6.0);
+    }
+    */
 }
