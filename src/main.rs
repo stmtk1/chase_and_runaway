@@ -34,6 +34,10 @@ impl PVector {
         (self.x * self.x + self.y * self.y).sqrt()
     }
 
+    fn dist(&self, other: PVector) -> f64 {
+        self.offset(other).len()
+    }
+    
     fn offset_x(self_x: f64, other_x: f64) -> f64 {
         let dist_x = other_x - self_x;
         // self_x < other_x => dist_x > 0
@@ -73,7 +77,7 @@ impl PVector {
         //println!("{}", others[0].(self));
         let mut ret: Vec<PVector>= Vec::with_capacity(others.len());
         for other in others {
-            if other.len() < r {
+            if self.dist(other.clone()) < r {
                 ret.push(other);
             }
         }
@@ -130,13 +134,13 @@ impl Animal{
     fn new2() -> Animal{
         let mut rng = rand::thread_rng();
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        Animal{ x: WIDTH / 2.0 - 10.0, y: HEIGHT / 2.0, velocity: 0.5, direction: 0.0 }
+        Animal{ x: WIDTH - 1.0, y: HEIGHT / 2.0, velocity: 0.5, direction: 0.0 }
     }
     
     fn new3() -> Animal{
         let mut rng = rand::thread_rng();
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        Animal{ x: WIDTH / 2.0, y: HEIGHT / 2.0, velocity: 0.5, direction: theta }
+        Animal{ x: 1.0, y: HEIGHT / 2.0, velocity: 0.5, direction: theta }
     }
     
     fn offset(&self, other:Animal) -> PVector {
@@ -203,7 +207,7 @@ impl Animal{
             x: self.x,
             y: self.y,
             velocity: self.velocity,
-            direction: -PVector::add_all(near_preyer).direction(),
+            direction: PVector::add_all(near_preyer).direction(),
         }
     }
 }
@@ -253,6 +257,7 @@ impl App {
         for cat in cats {
             new_cats.push(cat.chase(self.rats.clone()).move_self());
         }
+        println!("{}", new_cats[0].direction);
         self.cats = new_cats;
         let rats = &self.rats.clone();
         
@@ -265,7 +270,6 @@ impl App {
 }
 
 fn main(){
-    /*
     let opengl = OpenGL::V3_2;
     let mut window: Window = WindowSettings::new(
         "spinning-square",
@@ -303,8 +307,7 @@ fn main(){
             app.update();
         }
     }
-    */
-    println!("{}", Animal::new2().dist(Animal::new3()));
+     //println!("{}", Animal::new2().offset(Animal::new3()).x);
 }
 
 #[cfg(test)]
