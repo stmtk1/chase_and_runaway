@@ -20,7 +20,8 @@ struct Animal {
     x: f64,
     y: f64,
     velocity: f64,
-    direction: f64,
+    vx: f64,
+    vy: f64,
 }
 
 #[derive(Clone)]
@@ -74,7 +75,6 @@ impl PVector {
     }
     
     fn find_near(&self, others: Vec<PVector>, r: f64) -> Vec<PVector> {
-        //println!("{}", others[0].(self));
         let mut ret: Vec<PVector>= Vec::with_capacity(others.len());
         for other in others {
             if self.dist(other.clone()) < r {
@@ -99,11 +99,11 @@ impl PVector {
         ret
     }
     
+    /*
     fn direction(&self) -> f64 {
             self.x.atan2(self.y)
     }
-    
-    /*
+    */
     
     fn normalize(&self) -> PVector {
         let size = self.len();
@@ -119,7 +119,6 @@ impl PVector {
             y: self.y * scalar,
         }
     }
-    */
 }
 
 impl Animal{
@@ -128,19 +127,22 @@ impl Animal{
         let x: f64 = rng.gen::<f64>() * WIDTH;
         let y: f64 = rng.gen::<f64>() * HEIGHT;
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        Animal{ x: x, y: y, velocity: 0.5, direction: theta }
+        let velocity = 0.5;
+        Animal{ x: x, y: y, velocity: velocity, vx: theta.cos() * velocity, vy: theta.sin() * velocity }
     }
     
     fn new2() -> Animal{
-        let mut rng = rand::thread_rng();
-        let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        Animal{ x: WIDTH - 1.0, y: HEIGHT / 2.0, velocity: 0.5, direction: 0.0 }
+        let rng = rand::thread_rng();
+        let theta: f64 = 0.0;//rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
+        let velocity = 0.5;
+        Animal{ x: WIDTH - 1.0, y: HEIGHT / 2.0, velocity: velocity, vx: theta.cos() * velocity, vy: theta.sin() * velocity }
     }
     
     fn new3() -> Animal{
-        let mut rng = rand::thread_rng();
-        let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        Animal{ x: 1.0, y: HEIGHT / 2.0, velocity: 0.5, direction: theta }
+        let rng = rand::thread_rng();
+        let theta: f64 = 0.0; //rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
+        let velocity = 0.5;
+        Animal{ x: 1.0, y: HEIGHT / 2.0, velocity: velocity, vx: theta.cos() * velocity, vy: theta.sin() * velocity }
     }
     
     fn offset(&self, other:Animal) -> PVector {
@@ -155,8 +157,8 @@ impl Animal{
     }
     
     fn move_self(&self) -> Animal {
-        let mut new_x = self.x + self.velocity * self.direction.cos();
-        let mut new_y = self.y + self.velocity * self.direction.sin();
+        let mut new_x = self.x + self.vx;
+        let mut new_y = self.y + self.vy;
         
         if new_x > WIDTH {
             new_x -= WIDTH;
@@ -178,7 +180,8 @@ impl Animal{
             x: new_x,
             y: new_y,
             velocity: self.velocity,
-            direction: self.direction
+            vx: self.vx,
+            vy: self.vy
         }
     }
     
@@ -200,14 +203,23 @@ impl Animal{
     fn chase(&self, preyers: Vec<Animal>) -> Animal {
         let near_preyer = self
             .as_pvector()
-            .find_near(Animal::to_pvectors(preyers), 50.0);
-        println!("{}", near_preyer.len());
-        //self.direction = PVector::add_all(near_preyer).direction();
+            .find_near(Animal::to_pvectors(preyers), 10.0);
+        if(near_preyer.len() <= 0){
+            return self.clone();
+        }
+        let a = PVector::add_all(near_preyer.clone()).normalize().mult(self.velocity);
+        println!("{}, {}", a.x, a.y);
+        let next_velocity = PVector::add_all(near_preyer)
+                                    .normalize()
+                                    .mult(self.velocity);
+        //println!("{}, {}", next_velocity.x, next_velocity.y);
         Animal {
             x: self.x,
             y: self.y,
             velocity: self.velocity,
-            direction: PVector::add_all(near_preyer).direction(),
+            vx: next_velocity.x,
+            vy: next_velocity.y
+            //direction: PVector::add_all(near_preyer).direction(),
         }
     }
 }
@@ -257,7 +269,6 @@ impl App {
         for cat in cats {
             new_cats.push(cat.chase(self.rats.clone()).move_self());
         }
-        println!("{}", new_cats[0].direction);
         self.cats = new_cats;
         let rats = &self.rats.clone();
         
@@ -292,8 +303,8 @@ fn main(){
     
     let mut app = App {
         gl: GlGraphics::new(opengl),
-        cats: cats, 
-        rats: rats, 
+        cats: cats,
+        rats: rats,
     };
     
     let mut events = Events::new(EventSettings::new());
@@ -307,7 +318,13 @@ fn main(){
             app.update();
         }
     }
-     //println!("{}", Animal::new2().offset(Animal::new3()).x);
+    let cat = Animal{ x: 0.0, y: 0.0, velocity: 2.0, vx: 0.0, vy: 0.0 };
+    let rat = Animal{ x: 3.0, y: 4.0, velocity: 2.0, vx: 0.0, vy: 0.0 };
+    /*
+    let after_chase = Animal::new3().chase(vec![Animal::new3()]);
+    println!("{}, {}", after_chase.vx, after_chase.vy);
+    println!("{}, {}", after_chase.x, after_chase.y);
+    */
 }
 
 #[cfg(test)]
@@ -317,8 +334,8 @@ mod tests{
     
     #[test]
     fn distant_calculation_test(){
-        let a1 = Animal { x: 0.0, y: 0.0, velocity: 0.0, direction: 0.0 };
-        let a2 = Animal { x: 3.0, y: 4.0, velocity: 0.0, direction: 0.0 };
+        let a1 = Animal { x: 0.0, y: 0.0, velocity: 0.0, vx: 0.0, vy: 0.0 };
+        let a2 = Animal { x: 3.0, y: 4.0, velocity: 0.0, vx: 0.0, vy: 0.0 };
         assert_eq!(a1.dist(a2), 5.0);
     }
     
@@ -376,7 +393,6 @@ mod tests{
         assert_eq!(ret.y, 12.0);
     }
     
-    /*
     #[test]
     fn mult_test(){
         let v1 = PVector { x: 1.0, y: 2.0 };
@@ -384,5 +400,13 @@ mod tests{
         assert_eq!(v2.x, 3.0);
         assert_eq!(v2.y, 6.0);
     }
-    */
+
+    #[test]
+    fn chase_test(){
+        let cat = Animal{ x: 0.0, y: 0.0, velocity: 1.0, vx: 0.0, vy: 0.0 };
+        let rat = Animal{ x: 1.0, y: 0.0, velocity: 0.0, vx: 0.0, vy: 0.0 };
+        //let after_chase = cat.chase(vec![Animal]);
+        //assert_eq!(v2.x, 3.0);
+        //assert_eq!(v2.y, 6.0);
+    }
 }
