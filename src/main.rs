@@ -33,13 +33,13 @@ fn main(){
         .unwrap();
     
     let mut cats: Vec<Animal> = Vec::with_capacity(100);
-    for _ in 0..1 {
-        cats.push(Animal::new3());
+    for _ in 0..100 {
+        cats.push(Animal::new());
     }
     
     let mut rats: Vec<Animal> = Vec::with_capacity(100);
     for _ in 0..100 {
-        rats.push(Animal::new2());
+        rats.push(Animal::new());
     }
     
     let mut app = App {
@@ -59,13 +59,6 @@ fn main(){
             app.update();
         }
     }
-    let cat = Animal{ x: 0.0, y: 0.0, velocity: 2.0, vx: 0.0, vy: 0.0 };
-    let rat = Animal{ x: 3.0, y: 4.0, velocity: 2.0, vx: 0.0, vy: 0.0 };
-    /*
-    let after_chase = Animal::new3().chase(vec![Animal::new3()]);
-    println!("{}, {}", after_chase.vx, after_chase.vy);
-    println!("{}, {}", after_chase.x, after_chase.y);
-    */
 }
 
 #[cfg(test)]

@@ -23,31 +23,12 @@ impl Animal{
         Animal{ x: x, y: y, velocity: velocity, vx: theta.cos() * velocity, vy: theta.sin() * velocity }
     }
     
-    pub fn new2() -> Animal{
-        //let rng = rand::thread_rng();
-        let theta: f64 = 0.0;//rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        let velocity = 0.5;
-        Animal{ x: WIDTH - 1.0, y: HEIGHT / 2.0, velocity: velocity, vx: theta.cos() * velocity, vy: theta.sin() * velocity }
-    }
-    
-    pub fn new3() -> Animal{
-        //let rng = rand::thread_rng();
-        let theta: f64 = 0.0; //rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        let velocity = 0.5;
-        Animal{ x: 1.0, y: HEIGHT / 2.0, velocity: velocity, vx: theta.cos() * velocity, vy: theta.sin() * velocity }
-    }
-    
     pub fn offset(&self, other:Animal) -> PVector {
         let self_vec = PVector { x: self.x, y: self.y };
         let other_vec = PVector { x: other.x, y: other.y };
         self_vec.offset(other_vec)
     }
         
-    
-    pub fn dist(&self, other: Animal) -> f64 {
-        self.offset(other).len()
-    }
-    
     pub fn move_self(&self) -> Animal {
         let mut new_x = self.x + self.vx;
         let mut new_y = self.y + self.vy;
@@ -77,41 +58,26 @@ impl Animal{
         }
     }
     
-    pub fn as_pvector(&self) -> PVector {
-        PVector{
-            x: self.x,
-            y: self.y,
-        }
-    }
-    
-    pub fn to_pvectors(animals: Vec<Animal>) -> Vec<PVector> {
-        let mut animal_vec: Vec<PVector> = Vec::with_capacity(animals.len());
-        for animal in animals {
-            animal_vec.push(animal.as_pvector());
-        }
-        animal_vec
-    }
-    
     pub fn chase(&self, preyers: Vec<Animal>) -> Animal {
-        let near_preyer = self
-            .as_pvector()
-            .find_near(Animal::to_pvectors(preyers), 10.0);
+        let near_preyer: Vec<PVector> = preyers
+            .into_iter()
+            .map(|preyer| preyer.offset(self.clone()))
+            .filter(|pvector| pvector.len() < 10.0 )
+            .collect();
         if near_preyer.len() <= 0 {
             return self.clone();
         }
-        let a = PVector::add_all(near_preyer.clone()).normalize().mult(self.velocity);
-        println!("{}, {}", a.x, a.y);
-        let next_velocity = PVector::add_all(near_preyer)
-                                    .normalize()
-                                    .mult(self.velocity);
-        //println!("{}, {}", next_velocity.x, next_velocity.y);
+        let next_velocity = near_preyer
+            .into_iter()
+            .fold(PVector::zero(), |folded, vector| vector.add(folded))
+            .normalize()
+            .mult(self.velocity * -1.0);
         Animal {
             x: self.x,
             y: self.y,
             velocity: self.velocity,
             vx: next_velocity.x,
             vy: next_velocity.y
-            //direction: PVector::add_all(near_preyer).direction(),
         }
     }
 }
