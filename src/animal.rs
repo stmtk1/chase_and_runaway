@@ -80,4 +80,27 @@ impl Animal{
             vy: next_velocity.y
         }
     }
+    
+    pub fn run_away(&self, preyers: Vec<Animal>) -> Animal {
+        let near_preyer: Vec<PVector> = preyers
+            .into_iter()
+            .map(|preyer| preyer.offset(self.clone()))
+            .filter(|pvector| pvector.len() < 10.0 )
+            .collect();
+        if near_preyer.len() <= 0 {
+            return self.clone();
+        }
+        let next_velocity = near_preyer
+            .into_iter()
+            .fold(PVector::zero(), |folded, vector| vector.add(folded))
+            .normalize()
+            .mult(self.velocity);
+        Animal {
+            x: self.x,
+            y: self.y,
+            velocity: self.velocity,
+            vx: next_velocity.x,
+            vy: next_velocity.y
+        }
+    }
 }

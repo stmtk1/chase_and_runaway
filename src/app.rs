@@ -52,7 +52,7 @@ impl App {
         
         let mut new_rats: Vec<Animal> = Vec::with_capacity(rats.len());
         for rat in rats {
-            new_rats.push(rat.move_self());
+            new_rats.push(rat.run_away(self.cats.clone()).move_self());
         }
         self.rats = new_rats;
     }
