@@ -24,14 +24,14 @@ impl Animal{
     }
     
     pub fn new2() -> Animal{
-        let rng = rand::thread_rng();
+        //let rng = rand::thread_rng();
         let theta: f64 = 0.0;//rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
         let velocity = 0.5;
         Animal{ x: WIDTH - 1.0, y: HEIGHT / 2.0, velocity: velocity, vx: theta.cos() * velocity, vy: theta.sin() * velocity }
     }
     
     pub fn new3() -> Animal{
-        let rng = rand::thread_rng();
+        //let rng = rand::thread_rng();
         let theta: f64 = 0.0; //rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
         let velocity = 0.5;
         Animal{ x: 1.0, y: HEIGHT / 2.0, velocity: velocity, vx: theta.cos() * velocity, vy: theta.sin() * velocity }
@@ -96,7 +96,7 @@ impl Animal{
         let near_preyer = self
             .as_pvector()
             .find_near(Animal::to_pvectors(preyers), 10.0);
-        if(near_preyer.len() <= 0){
+        if near_preyer.len() <= 0 {
             return self.clone();
         }
         let a = PVector::add_all(near_preyer.clone()).normalize().mult(self.velocity);
