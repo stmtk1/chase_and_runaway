@@ -54,6 +54,10 @@ impl App {
         for rat in rats {
             new_rats.push(rat.run_away(self.cats.clone()).move_self());
         }
+        
+        for cat in cats {
+            new_rats = cat.eat(new_rats);
+        }
         self.rats = new_rats;
     }
 }

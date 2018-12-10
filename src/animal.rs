@@ -8,9 +8,10 @@ const HEIGHT: f64 = 480.0;
 pub struct Animal {
     pub x: f64,
     pub y: f64,
-    pub velocity: f64,
-    pub vx: f64,
-    pub vy: f64,
+    velocity: f64,
+    vx: f64,
+    vy: f64,
+    dead: bool,
 }
 
 impl Animal{
@@ -20,7 +21,14 @@ impl Animal{
         let y: f64 = rng.gen::<f64>() * HEIGHT;
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
         let velocity = 0.5;
-        Animal{ x: x, y: y, velocity: velocity, vx: theta.cos() * velocity, vy: theta.sin() * velocity }
+        Animal{ 
+            x: x, 
+            y: y, 
+            velocity: velocity, 
+            vx: theta.cos() * velocity, 
+            vy: theta.sin() * velocity,
+            dead: false
+        }
     }
     
     pub fn offset(&self, other:Animal) -> PVector {
@@ -28,7 +36,7 @@ impl Animal{
         let other_vec = PVector { x: other.x, y: other.y };
         self_vec.offset(other_vec)
     }
-        
+    
     pub fn move_self(&self) -> Animal {
         let mut new_x = self.x + self.vx;
         let mut new_y = self.y + self.vy;
@@ -54,7 +62,8 @@ impl Animal{
             y: new_y,
             velocity: self.velocity,
             vx: self.vx,
-            vy: self.vy
+            vy: self.vy,
+            dead: false
         }
     }
     
@@ -77,7 +86,8 @@ impl Animal{
             y: self.y,
             velocity: self.velocity,
             vx: next_velocity.x,
-            vy: next_velocity.y
+            vy: next_velocity.y,
+            dead: false
         }
     }
     
@@ -100,7 +110,19 @@ impl Animal{
             y: self.y,
             velocity: self.velocity,
             vx: next_velocity.x,
-            vy: next_velocity.y
+            vy: next_velocity.y,
+            dead: false
         }
+    }
+    
+    pub fn eat(&self, rats: Vec<Animal>) -> Vec<Animal> {
+     rats
+            .into_iter()
+            .filter(|rat| !self.is_within(rat.clone(), 1.0) )
+            .collect()
+    }
+    
+    pub fn is_within(&self, other: Animal, radious: f64) -> bool {
+        self.offset(other).len() < radious
     }
 }
