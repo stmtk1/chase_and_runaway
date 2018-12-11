@@ -11,7 +11,6 @@ pub struct Animal {
     velocity: f64,
     vx: f64,
     vy: f64,
-    dead: bool,
 }
 
 impl Animal{
@@ -27,7 +26,6 @@ impl Animal{
             velocity: velocity, 
             vx: theta.cos() * velocity, 
             vy: theta.sin() * velocity,
-            dead: false
         }
     }
     
@@ -63,56 +61,55 @@ impl Animal{
             velocity: self.velocity,
             vx: self.vx,
             vy: self.vy,
-            dead: false
         }
+    }
+    
+    fn collect_near_pvectors(&self, animals: Vec<Animal>) -> Vec<Animal> {
+        animals
+            .into_iter()
+            .filter(|animal| animal.is_within(self.clone(), 10.0))
+            .collect()
+    }
+    
+    fn calculate_direction(&self, animals: Vec<Animal>) -> PVector {
+        animals
+            .into_iter()
+            .map(|animal| animal.offset(self.clone()))
+            .fold(PVector::zero(), |folded, vector| vector.add(folded))
+            .normalize()
     }
     
     pub fn chase(&self, preyers: Vec<Animal>) -> Animal {
-        let near_preyer: Vec<PVector> = preyers
-            .into_iter()
-            .map(|preyer| preyer.offset(self.clone()))
-            .filter(|pvector| pvector.len() < 10.0 )
-            .collect();
+        let near_preyer = self.collect_near_pvectors(preyers);
+        
         if near_preyer.len() <= 0 {
             return self.clone();
         }
-        let next_velocity = near_preyer
-            .into_iter()
-            .fold(PVector::zero(), |folded, vector| vector.add(folded))
-            .normalize()
+        let next_velocity = self
+            .calculate_direction(near_preyer)
             .mult(self.velocity * -1.0);
-        Animal {
-            x: self.x,
-            y: self.y,
-            velocity: self.velocity,
-            vx: next_velocity.x,
-            vy: next_velocity.y,
-            dead: false
-        }
+        
+        self.apply_velocity(next_velocity)
     }
     
     pub fn run_away(&self, preyers: Vec<Animal>) -> Animal {
-        let near_preyer: Vec<PVector> = preyers
-            .into_iter()
-            .map(|preyer| preyer.offset(self.clone()))
-            .filter(|pvector| pvector.len() < 10.0 )
-            .collect();
+        let near_preyer = self.collect_near_pvectors(preyers);
+        
         if near_preyer.len() <= 0 {
             return self.clone();
         }
-        let next_velocity = near_preyer
-            .into_iter()
-            .fold(PVector::zero(), |folded, vector| vector.add(folded))
-            .normalize()
+        let next_velocity = self
+            .calculate_direction(near_preyer)
             .mult(self.velocity);
-        Animal {
-            x: self.x,
-            y: self.y,
-            velocity: self.velocity,
-            vx: next_velocity.x,
-            vy: next_velocity.y,
-            dead: false
-        }
+        
+        self.apply_velocity(next_velocity)
+    }
+    
+    fn apply_velocity(&self, pvector: PVector) -> Animal {
+        let mut ret = self.clone();
+        ret.vx = pvector.x;
+        ret.vy = pvector.y;
+        ret
     }
     
     pub fn eat(&self, rats: Vec<Animal>) -> Vec<Animal> {
