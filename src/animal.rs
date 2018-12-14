@@ -11,6 +11,8 @@ pub struct Animal {
     velocity: f64,
     vx: f64,
     vy: f64,
+    //chasing: &Animal,
+    //chased: Vec<&Animal>,
 }
 
 impl Animal{
