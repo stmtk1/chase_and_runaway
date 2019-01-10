@@ -9,8 +9,8 @@ pub struct Animal {
     pub x: f64,
     pub y: f64,
     velocity: f64,
-    vx: f64,
-    vy: f64,
+    pub vx: f64,
+    pub vy: f64,
     //chasing: &Animal,
     //chased: Vec<&Animal>,
 }
@@ -21,7 +21,7 @@ impl Animal{
         let x: f64 = rng.gen::<f64>() * WIDTH;
         let y: f64 = rng.gen::<f64>() * HEIGHT;
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        let velocity = 0.5;
+        let velocity = 1.0;
         Animal{ 
             x: x, 
             y: y, 
@@ -82,35 +82,53 @@ impl Animal{
     }
     
     pub fn chase(&self, preyers: Vec<Animal>) -> Animal {
-        let near_preyer = self.collect_near_pvectors(preyers);
-        
-        if near_preyer.len() <= 0 {
-            return self.clone();
-        }
+        //let mut ret = self.clone();
         let next_velocity = self
-            .calculate_direction(near_preyer)
-            .mult(self.velocity * -1.0);
-        
+            .as_velocity()
+            .add(self.chase_vector(preyers.clone()))
+            .normalize()
+            .mult(self.velocity);
         self.apply_velocity(next_velocity)
     }
     
-    pub fn run_away(&self, preyers: Vec<Animal>) -> Animal {
+    fn chase_vector(&self, preyers: Vec<Animal>) -> PVector {
         let near_preyer = self.collect_near_pvectors(preyers);
         
         if near_preyer.len() <= 0 {
-            return self.clone();
+            return PVector::zero();
         }
-        let next_velocity = self
-            .calculate_direction(near_preyer)
-            .mult(self.velocity);
         
+        self
+            .calculate_direction(near_preyer)
+            .mult(-1.0)
+        //self.apply_velocity(next_velocity)
+    }
+    
+    pub fn run_away(&self, preyers: Vec<Animal>) -> Animal {
+        let next_velocity = self
+            .as_velocity()
+            .add(self.run_away_vector(preyers))
+            .normalize()
+            .mult(self.velocity);
         self.apply_velocity(next_velocity)
+    }
+    
+    fn run_away_vector(&self, preyers: Vec<Animal>) -> PVector {
+        let near_preyer = self.collect_near_pvectors(preyers);
+        
+        if near_preyer.len() <= 0 {
+            return PVector::zero();
+        }
+        
+        self
+            .calculate_direction(near_preyer)
     }
     
     fn apply_velocity(&self, pvector: PVector) -> Animal {
         let mut ret = self.clone();
         ret.vx = pvector.x;
         ret.vy = pvector.y;
+        //println!("{}, {}", ret.vx, ret.vy);
         ret
     }
     
@@ -123,5 +141,12 @@ impl Animal{
     
     pub fn is_within(&self, other: Animal, radious: f64) -> bool {
         self.offset(other).len() < radious
+    }
+    
+    fn as_velocity(&self) -> PVector {
+        PVector {
+            x: self.vx,
+            y: self.vy,
+        }
     }
 }
