@@ -84,6 +84,7 @@ impl Animal{
             .as_velocity()
             .add(self.chase_vector(rats.clone()))
             .add(self.separate_same(cats.clone()))
+            .add(self.same_direction(cats.clone()))
             .normalize()
             .mult(self.velocity);
         self.apply_velocity(next_velocity)
@@ -104,12 +105,33 @@ impl Animal{
     fn separate_same(&self, same_kind: Vec<Animal>) -> PVector {
         let near_animal = self.collect_near_pvectors(same_kind);
         
-        // 自分自身もカウントされてしまうため
+        // 自分自身もカウントされてしまうため1
+        // TODO 自分自身がカウントされないようにする
         if near_animal.len() <= 1 {
             return PVector::zero();
         }
         self
             .calculate_direction(near_animal)
+    }
+    
+    fn same_direction(&self, same_kind: Vec<Animal>) -> PVector{
+        let near_animals = self.collect_near_pvectors(same_kind);
+        
+        // 自分自身もカウントされてしまうため1
+        // TODO 自分自身がカウントされないようにする
+        if near_animals.len() <= 1 {
+            return PVector::zero();
+        }
+        self
+            .add_velocity(near_animals)
+    }
+    
+    fn add_velocity(&self, animals: Vec<Animal>) -> PVector {
+        animals
+            .into_iter()
+            .map(|animal| animal.as_velocity())
+            .fold(PVector::zero(), |folded, vector| vector.add(folded))
+            .normalize()
     }
     
     pub fn run_away(&self, preyers: Vec<Animal>) -> Animal {

@@ -38,7 +38,7 @@ fn main(){
     }
     
     let mut rats: Vec<Animal> = Vec::with_capacity(100);
-    for _ in 0..100 {
+    for _ in 0..1 {
         rats.push(Animal::new());
     }
     
