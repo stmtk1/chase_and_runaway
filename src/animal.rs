@@ -11,8 +11,6 @@ pub struct Animal {
     velocity: f64,
     pub vx: f64,
     pub vy: f64,
-    //chasing: &Animal,
-    //chased: Vec<&Animal>,
 }
 
 impl Animal{
@@ -81,11 +79,11 @@ impl Animal{
             .normalize()
     }
     
-    pub fn chase(&self, preyers: Vec<Animal>) -> Animal {
-        //let mut ret = self.clone();
+    pub fn chase(&self, rats: Vec<Animal>, cats: Vec<Animal>) -> Animal {
         let next_velocity = self
             .as_velocity()
-            .add(self.chase_vector(preyers.clone()))
+            .add(self.chase_vector(rats.clone()))
+            .add(self.separate_same(cats.clone()))
             .normalize()
             .mult(self.velocity);
         self.apply_velocity(next_velocity)
@@ -101,7 +99,17 @@ impl Animal{
         self
             .calculate_direction(near_preyer)
             .mult(-1.0)
-        //self.apply_velocity(next_velocity)
+    }
+    
+    fn separate_same(&self, same_kind: Vec<Animal>) -> PVector {
+        let near_animal = self.collect_near_pvectors(same_kind);
+        
+        // 自分自身もカウントされてしまうため
+        if near_animal.len() <= 1 {
+            return PVector::zero();
+        }
+        self
+            .calculate_direction(near_animal)
     }
     
     pub fn run_away(&self, preyers: Vec<Animal>) -> Animal {
@@ -128,7 +136,6 @@ impl Animal{
         let mut ret = self.clone();
         ret.vx = pvector.x;
         ret.vy = pvector.y;
-        //println!("{}, {}", ret.vx, ret.vy);
         ret
     }
     

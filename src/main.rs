@@ -33,7 +33,7 @@ fn main(){
         .unwrap();
     
     let mut cats: Vec<Animal> = Vec::with_capacity(100);
-    for _ in 0..1 {
+    for _ in 0..100 {
         cats.push(Animal::new());
     }
     

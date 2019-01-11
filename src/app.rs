@@ -47,13 +47,9 @@ impl App {
     }
     
     fn move_cats(cats: Vec<Animal>, rats: Vec<Animal>) -> Vec<Animal>{
-        for cat in cats.clone(){
-            println!("{}, {}", cat.vx, cat.vy);
-        }
-        
-        cats
+        cats.clone()
             .into_iter()
-            .map(|cat| cat.chase(rats.clone()).move_self())
+            .map(|cat| cat.chase(rats.clone(), cats.clone()).move_self())
             .collect()
     }
     
