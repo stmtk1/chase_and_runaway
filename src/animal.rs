@@ -64,10 +64,10 @@ impl Animal{
         }
     }
     
-    fn collect_near_pvectors(&self, animals: Vec<Animal>) -> Vec<Animal> {
+    fn collect_near_pvectors(&self, animals: Vec<Animal>, radious: f64) -> Vec<Animal> {
         animals
             .into_iter()
-            .filter(|animal| animal.is_within(self.clone(), 10.0))
+            .filter(|animal| animal.is_within(self.clone(), radious))
             .collect()
     }
     
@@ -84,14 +84,15 @@ impl Animal{
             .as_velocity()
             .add(self.chase_vector(rats.clone()))
             .add(self.separate_same(cats.clone()))
-            .add(self.same_direction(cats.clone()))
+            .add(self.align(cats.clone()))
+            .add(self.cohension(cats.clone()))
             .normalize()
             .mult(self.velocity);
         self.apply_velocity(next_velocity)
     }
     
     fn chase_vector(&self, preyers: Vec<Animal>) -> PVector {
-        let near_preyer = self.collect_near_pvectors(preyers);
+        let near_preyer = self.collect_near_pvectors(preyers, 10.0);
         
         if near_preyer.len() <= 0 {
             return PVector::zero();
@@ -103,7 +104,7 @@ impl Animal{
     }
     
     fn separate_same(&self, same_kind: Vec<Animal>) -> PVector {
-        let near_animal = self.collect_near_pvectors(same_kind);
+        let near_animal = self.collect_near_pvectors(same_kind, 5.0);
         
         // 自分自身もカウントされてしまうため1
         // TODO 自分自身がカウントされないようにする
@@ -114,8 +115,8 @@ impl Animal{
             .calculate_direction(near_animal)
     }
     
-    fn same_direction(&self, same_kind: Vec<Animal>) -> PVector{
-        let near_animals = self.collect_near_pvectors(same_kind);
+    fn align(&self, same_kind: Vec<Animal>) -> PVector{
+        let near_animals = self.collect_near_pvectors(same_kind, 10.0);
         
         // 自分自身もカウントされてしまうため1
         // TODO 自分自身がカウントされないようにする
@@ -134,6 +135,19 @@ impl Animal{
             .normalize()
     }
     
+    fn cohension(&self, same_kind: Vec<Animal>) -> PVector {
+        let near_animals = self.collect_near_pvectors(same_kind, 15.0);
+        
+        // 自分自身もカウントされてしまうため1
+        // TODO 自分自身がカウントされないようにする
+        if near_animals.len() <= 1 {
+            return PVector::zero();
+        }
+        self
+            .calculate_direction(near_animals)
+            .mult(-1.0)
+    }
+    
     pub fn run_away(&self, preyers: Vec<Animal>) -> Animal {
         let next_velocity = self
             .as_velocity()
@@ -144,7 +158,7 @@ impl Animal{
     }
     
     fn run_away_vector(&self, preyers: Vec<Animal>) -> PVector {
-        let near_preyer = self.collect_near_pvectors(preyers);
+        let near_preyer = self.collect_near_pvectors(preyers, 10.0);
         
         if near_preyer.len() <= 0 {
             return PVector::zero();
