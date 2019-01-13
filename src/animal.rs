@@ -7,6 +7,7 @@ const CHASE_MAX: f64 = 480.0;
 const SEPARATE_MAX: f64 = 480.0;
 const ALIGN_MAX: f64 = 480.0;
 const COHENSION_MAX: f64 = 480.0;
+const ENERGY_MAX: u64 = 1000;
 
 #[derive(Clone)]
 pub struct Animal {
@@ -19,6 +20,7 @@ pub struct Animal {
     separate_weight: f64,
     align_weight: f64,
     cohension_weight: f64,
+    energy: u64,
 }
 
 impl Animal{
@@ -36,6 +38,7 @@ impl Animal{
             separate_weight: rng.gen::<f64>() * SEPARATE_MAX,
             align_weight: rng.gen::<f64>() * ALIGN_MAX,
             cohension_weight: rng.gen::<f64>() * COHENSION_MAX,
+            energy: ENERGY_MAX,
         }
     }
     
@@ -66,6 +69,7 @@ impl Animal{
             new_y += HEIGHT;
         }
         
+        ret.energy -= 1;
         ret.x = new_x;
         ret.y = new_y;
         ret
@@ -75,6 +79,13 @@ impl Animal{
         animals
             .into_iter()
             .filter(|animal| animal.is_within(self.clone(), radious))
+            .collect()
+    }
+    
+    pub fn delete_dead(animals: Vec<Animal>) -> Vec<Animal> {
+        animals
+            .into_iter()
+            .filter(|animal| animal.energy > 0)
             .collect()
     }
     
