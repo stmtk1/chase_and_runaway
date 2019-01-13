@@ -3,14 +3,22 @@ use pvector::PVector;
 
 const WIDTH: f64 = 640.0;
 const HEIGHT: f64 = 480.0;
+const CHASE_MAX: f64 = 480.0;
+const SEPARATE_MAX: f64 = 480.0;
+const ALIGN_MAX: f64 = 480.0;
+const COHENSION_MAX: f64 = 480.0;
 
 #[derive(Clone)]
 pub struct Animal {
     pub x: f64,
     pub y: f64,
     velocity: f64,
-    pub vx: f64,
-    pub vy: f64,
+    vx: f64,
+    vy: f64,
+    chase_weight: f64,
+    separate_weight: f64,
+    align_weight: f64,
+    cohension_weight: f64,
 }
 
 impl Animal{
@@ -24,6 +32,10 @@ impl Animal{
             velocity: velocity, 
             vx: theta.cos() * velocity, 
             vy: theta.sin() * velocity,
+            chase_weight: rng.gen::<f64>() * CHASE_MAX,
+            separate_weight: rng.gen::<f64>() * SEPARATE_MAX,
+            align_weight: rng.gen::<f64>() * ALIGN_MAX,
+            cohension_weight: rng.gen::<f64>() * COHENSION_MAX,
         }
     }
     
@@ -36,6 +48,7 @@ impl Animal{
     pub fn move_self(&self) -> Animal {
         let mut new_x = self.x + self.vx;
         let mut new_y = self.y + self.vy;
+        let mut ret = self.clone();
         
         if new_x > WIDTH {
             new_x -= WIDTH;
@@ -53,13 +66,9 @@ impl Animal{
             new_y += HEIGHT;
         }
         
-        Animal {
-            x: new_x,
-            y: new_y,
-            velocity: self.velocity,
-            vx: self.vx,
-            vy: self.vy,
-        }
+        ret.x = new_x;
+        ret.y = new_y;
+        ret
     }
     
     fn collect_near_pvectors(&self, animals: Vec<Animal>, radious: f64) -> Vec<Animal> {
@@ -98,7 +107,7 @@ impl Animal{
         
         self
             .calculate_direction(near_preyer)
-            .mult(-1.0)
+            .mult(-1.0 * self.chase_weight)
     }
     
     fn separate_same(&self, same_kind: Vec<Animal>) -> PVector {
@@ -111,6 +120,7 @@ impl Animal{
         }
         self
             .calculate_direction(near_animal)
+            .mult(self.separate_weight)
     }
     
     fn align(&self, same_kind: Vec<Animal>) -> PVector{
@@ -123,6 +133,7 @@ impl Animal{
         }
         self
             .add_velocity(near_animals)
+            .mult(self.align_weight)
     }
     
     fn add_velocity(&self, animals: Vec<Animal>) -> PVector {
@@ -143,7 +154,7 @@ impl Animal{
         }
         self
             .calculate_direction(near_animals)
-            .mult(-1.0)
+            .mult(-1.0 * self.cohension_weight)
     }
     
     pub fn run_away(&self, preyers: Vec<Animal>) -> Animal {
