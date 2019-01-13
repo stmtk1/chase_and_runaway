@@ -16,13 +16,11 @@ pub struct Animal {
 impl Animal{
     pub fn new() -> Animal{
         let mut rng = rand::thread_rng();
-        let x: f64 = rng.gen::<f64>() * WIDTH;
-        let y: f64 = rng.gen::<f64>() * HEIGHT;
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
         let velocity = 1.0;
         Animal{ 
-            x: x, 
-            y: y, 
+            x: rng.gen::<f64>() * WIDTH, 
+            y: rng.gen::<f64>() * HEIGHT,
             velocity: velocity, 
             vx: theta.cos() * velocity, 
             vy: theta.sin() * velocity,
