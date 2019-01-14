@@ -213,7 +213,8 @@ impl Animal{
         let mut rng = rand::thread_rng();
         let mut ret: Vec<Animal> = Vec::with_capacity(animals.len() * 2);
         for animal in animals {
-            if rng.gen::<f32>() < 0.002 {
+            // 複製する確率をきちんと決める
+            if rng.gen::<f32>() < 0.0011 {
                 ret.push(animal.clone().descendant());
             }
             ret.push(animal);
