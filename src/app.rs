@@ -51,7 +51,7 @@ impl App {
             .into_iter()
             .map(|cat| cat.chase(rats.clone(), cats.clone()).move_self())
             .collect();
-        Animal::delete_dead(ret)
+        Animal::life_manage(Animal::delete_dead(ret))
     }
     
     fn move_rats(rats: Vec<Animal>, cats: Vec<Animal>) -> Vec<Animal> {
@@ -59,7 +59,7 @@ impl App {
             .into_iter()
             .map(|rat| rat.run_away(cats.clone()).move_self())
             .collect();
-        Animal::delete_dead(ret)
+        Animal::life_manage(Animal::delete_dead(ret))
     }
     
     fn eat_rats(cats: Vec<Animal>, rats: Vec<Animal>) -> Vec<Animal> {

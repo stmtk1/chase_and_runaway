@@ -195,6 +195,32 @@ impl Animal{
         ret
     }
     
+    fn mutate(value: f64, value_max: f64) -> f64{
+        let mut rng = rand::thread_rng();
+        (rng.gen::<f64>() * 2.0 - 1.0 + value).min(value_max).max(0.0)
+    }
+    
+    fn descendant(&self) -> Animal{
+        let mut ret = Animal::new();
+        ret.chase_weight = Animal::mutate(self.chase_weight, CHASE_MAX);
+        ret.separate_weight = Animal::mutate(self.separate_weight, SEPARATE_MAX);
+        ret.align_weight = Animal::mutate(self.align_weight, ALIGN_MAX);
+        ret.cohension_weight = Animal::mutate(self.cohension_weight, COHENSION_MAX);
+        ret
+    }
+    
+    pub fn life_manage(animals: Vec<Animal>) -> Vec<Animal> {
+        let mut rng = rand::thread_rng();
+        let mut ret: Vec<Animal> = Vec::with_capacity(animals.len() * 2);
+        for animal in animals {
+            if rng.gen::<f32>() < 0.002 {
+                ret.push(animal.clone().descendant());
+            }
+            ret.push(animal);
+        }
+        ret
+    }
+    
     pub fn eat(&self, rats: Vec<Animal>) -> Vec<Animal> {
      rats
             .into_iter()
