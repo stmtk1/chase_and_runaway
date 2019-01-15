@@ -42,7 +42,7 @@ impl Animal{
         }
     }
     
-    pub fn offset(&self, other:Animal) -> PVector {
+    pub fn offset(&self, other:&Animal) -> PVector {
         let self_vec = PVector { x: self.x, y: self.y };
         let other_vec = PVector { x: other.x, y: other.y };
         self_vec.offset(other_vec)
@@ -75,10 +75,11 @@ impl Animal{
         ret
     }
     
-    fn collect_near_pvectors(&self, animals: Vec<Animal>, radious: f64) -> Vec<Animal> {
+    fn collect_near_pvectors(&self, animals: &Vec<Animal>, radious: f64) -> Vec<Animal> {
         animals
             .into_iter()
-            .filter(|animal| animal.is_within(self.clone(), radious))
+            .filter(|animal| animal.is_within(self, radious))
+            .map(|animal| animal.clone())
             .collect()
     }
     
@@ -92,24 +93,24 @@ impl Animal{
     fn calculate_direction(&self, animals: Vec<Animal>) -> PVector {
         animals
             .into_iter()
-            .map(|animal| animal.offset(self.clone()))
+            .map(|animal| animal.offset(self))
             .fold(PVector::zero(), |folded, vector| vector.add(folded))
             .normalize()
     }
     
-    pub fn chase(&self, rats: Vec<Animal>, cats: Vec<Animal>) -> Animal {
+    pub fn chase(&self, rats: &Vec<Animal>, cats: &Vec<Animal>) -> Animal {
         let next_velocity = self
             .as_velocity()
-            .add(self.chase_vector(rats.clone()))
-            .add(self.separate_same(cats.clone()))
-            .add(self.align(cats.clone()))
-            .add(self.cohension(cats.clone()))
+            .add(self.chase_vector(rats))
+            .add(self.separate_same(cats))
+            .add(self.align(cats))
+            .add(self.cohension(cats))
             .normalize()
             .mult(self.velocity);
         self.apply_velocity(next_velocity)
     }
     
-    fn chase_vector(&self, preyers: Vec<Animal>) -> PVector {
+    fn chase_vector(&self, preyers: &Vec<Animal>) -> PVector {
         let near_preyer = self.collect_near_pvectors(preyers, 10.0);
         
         if near_preyer.len() <= 0 {
@@ -121,7 +122,7 @@ impl Animal{
             .mult(-1.0 * self.chase_weight)
     }
     
-    fn separate_same(&self, same_kind: Vec<Animal>) -> PVector {
+    fn separate_same(&self, same_kind: &Vec<Animal>) -> PVector {
         let near_animal = self.collect_near_pvectors(same_kind, 5.0);
         
         // 自分自身もカウントされてしまうため1
@@ -134,7 +135,7 @@ impl Animal{
             .mult(self.separate_weight)
     }
     
-    fn align(&self, same_kind: Vec<Animal>) -> PVector{
+    fn align(&self, same_kind: &Vec<Animal>) -> PVector{
         let near_animals = self.collect_near_pvectors(same_kind, 10.0);
         
         // 自分自身もカウントされてしまうため1
@@ -143,11 +144,11 @@ impl Animal{
             return PVector::zero();
         }
         self
-            .add_velocity(near_animals)
+            .add_velocity(&near_animals)
             .mult(self.align_weight)
     }
     
-    fn add_velocity(&self, animals: Vec<Animal>) -> PVector {
+    fn add_velocity(&self, animals: &Vec<Animal>) -> PVector {
         animals
             .into_iter()
             .map(|animal| animal.as_velocity())
@@ -155,7 +156,7 @@ impl Animal{
             .normalize()
     }
     
-    fn cohension(&self, same_kind: Vec<Animal>) -> PVector {
+    fn cohension(&self, same_kind: &Vec<Animal>) -> PVector {
         let near_animals = self.collect_near_pvectors(same_kind, 15.0);
         
         // 自分自身もカウントされてしまうため1
@@ -168,7 +169,7 @@ impl Animal{
             .mult(-1.0 * self.cohension_weight)
     }
     
-    pub fn run_away(&self, preyers: Vec<Animal>) -> Animal {
+    pub fn run_away(&self, preyers: &Vec<Animal>) -> Animal {
         let next_velocity = self
             .as_velocity()
             .add(self.run_away_vector(preyers))
@@ -177,7 +178,7 @@ impl Animal{
         self.apply_velocity(next_velocity)
     }
     
-    fn run_away_vector(&self, preyers: Vec<Animal>) -> PVector {
+    fn run_away_vector(&self, preyers: &Vec<Animal>) -> PVector {
         let near_preyer = self.collect_near_pvectors(preyers, 10.0);
         
         if near_preyer.len() <= 0 {
@@ -217,7 +218,7 @@ impl Animal{
             if rng.gen::<f32>() < 0.0011 {
                 ret.push(animal.clone().descendant());
             }
-            ret.push(animal);
+            ret.push(animal.clone());
         }
         ret
     }
@@ -225,11 +226,11 @@ impl Animal{
     pub fn eat(&self, rats: Vec<Animal>) -> Vec<Animal> {
      rats
             .into_iter()
-            .filter(|rat| !self.is_within(rat.clone(), 1.0) )
+            .filter(|rat| !self.is_within(rat, 1.0) )
             .collect()
     }
     
-    pub fn is_within(&self, other: Animal, radious: f64) -> bool {
+    pub fn is_within(&self, other: &Animal, radious: f64) -> bool {
         self.offset(other).len() < radious
     }
     

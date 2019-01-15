@@ -49,7 +49,7 @@ impl App {
     fn move_cats(cats: Vec<Animal>, rats: Vec<Animal>) -> Vec<Animal>{
         let ret = cats.clone()
             .into_iter()
-            .map(|cat| cat.chase(rats.clone(), cats.clone()).move_self())
+            .map(|cat| cat.chase(&rats, &cats).move_self())
             .collect();
         Animal::life_manage(Animal::delete_dead(ret))
     }
@@ -57,7 +57,7 @@ impl App {
     fn move_rats(rats: Vec<Animal>, cats: Vec<Animal>) -> Vec<Animal> {
         let ret = rats
             .into_iter()
-            .map(|rat| rat.run_away(cats.clone()).move_self())
+            .map(|rat| rat.run_away(&cats).move_self())
             .collect();
         Animal::life_manage(Animal::delete_dead(ret))
     }
