@@ -48,7 +48,7 @@ impl Animal{
         self_vec.offset(other_vec)
     }
     
-    pub fn move_self(&self) -> Animal {
+    fn move_self(&self) -> Animal {
         let mut new_x = self.x + self.vx;
         let mut new_y = self.y + self.vy;
         let mut ret = self.clone();
@@ -83,13 +83,6 @@ impl Animal{
             .collect()
     }
     
-    pub fn delete_dead(animals: Vec<Animal>) -> Vec<Animal> {
-        animals
-            .into_iter()
-            .filter(|animal| animal.energy > 0)
-            .collect()
-    }
-    
     fn calculate_direction(&self, animals: Vec<Animal>) -> PVector {
         animals
             .into_iter()
@@ -98,7 +91,7 @@ impl Animal{
             .normalize()
     }
     
-    pub fn chase(&self, rats: &Vec<Animal>, cats: &Vec<Animal>) -> Animal {
+    fn chase(&self, rats: &Vec<Animal>, cats: &Vec<Animal>) -> Animal {
         let next_velocity = self
             .as_velocity()
             .add(self.chase_vector(rats))
@@ -107,7 +100,10 @@ impl Animal{
             .add(self.cohension(cats))
             .normalize()
             .mult(self.velocity);
-        self.apply_velocity(next_velocity)
+        
+        self
+            .apply_velocity(next_velocity)
+            .move_self()
     }
     
     fn chase_vector(&self, preyers: &Vec<Animal>) -> PVector {
@@ -169,13 +165,15 @@ impl Animal{
             .mult(-1.0 * self.cohension_weight)
     }
     
-    pub fn run_away(&self, preyers: &Vec<Animal>) -> Animal {
+    fn run_away(&self, preyers: &Vec<Animal>) -> Animal {
         let next_velocity = self
             .as_velocity()
             .add(self.run_away_vector(preyers))
             .normalize()
             .mult(self.velocity);
-        self.apply_velocity(next_velocity)
+        self
+            .apply_velocity(next_velocity)
+            .move_self()
     }
     
     fn run_away_vector(&self, preyers: &Vec<Animal>) -> PVector {
@@ -210,17 +208,36 @@ impl Animal{
         ret
     }
     
-    pub fn life_manage(animals: Vec<Animal>) -> Vec<Animal> {
+    fn life_manage(animals: Vec<Animal>) -> Vec<Animal> {
         let mut rng = rand::thread_rng();
         let mut ret: Vec<Animal> = Vec::with_capacity(animals.len() * 2);
         for animal in animals {
-            // 複製する確率をきちんと決める
+            if animal.energy <= 0{
+                continue;
+            }
+            // TODO 複製する確率をきちんと決める
             if rng.gen::<f32>() < 0.0011 {
                 ret.push(animal.clone().descendant());
             }
             ret.push(animal.clone());
         }
         ret
+    }
+    
+    pub fn next_states_cats(cats: &Vec<Animal>, rats: &Vec<Animal>) -> Vec<Animal> {
+        let ret: Vec<Animal> = cats
+            .into_iter()
+            .map(|cat| cat.chase(rats, cats))
+            .collect();
+        Animal::life_manage(ret)
+    }
+    
+    pub fn next_states_rats(cats: &Vec<Animal>, rats: &Vec<Animal>) -> Vec<Animal> {
+        let ret: Vec<Animal> = rats
+            .into_iter()
+            .map(|rat| rat.run_away(cats))
+            .collect();
+        Animal::life_manage(ret)
     }
     
     pub fn eat(&self, rats: Vec<Animal>) -> Vec<Animal> {
@@ -230,7 +247,7 @@ impl Animal{
             .collect()
     }
     
-    pub fn is_within(&self, other: &Animal, radious: f64) -> bool {
+    fn is_within(&self, other: &Animal, radious: f64) -> bool {
         self.offset(other).len() < radious
     }
     

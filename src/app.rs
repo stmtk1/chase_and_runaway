@@ -46,22 +46,6 @@ impl App {
         });
     }
     
-    fn move_cats(cats: Vec<Animal>, rats: Vec<Animal>) -> Vec<Animal>{
-        let ret = cats.clone()
-            .into_iter()
-            .map(|cat| cat.chase(&rats, &cats).move_self())
-            .collect();
-        Animal::life_manage(Animal::delete_dead(ret))
-    }
-    
-    fn move_rats(rats: Vec<Animal>, cats: Vec<Animal>) -> Vec<Animal> {
-        let ret = rats
-            .into_iter()
-            .map(|rat| rat.run_away(&cats).move_self())
-            .collect();
-        Animal::life_manage(Animal::delete_dead(ret))
-    }
-    
     fn eat_rats(cats: Vec<Animal>, rats: Vec<Animal>) -> Vec<Animal> {
         let mut new_rats = rats.clone();
         
@@ -72,8 +56,10 @@ impl App {
     }
 
     pub fn update(&mut self) {
-        self.cats = App::move_cats(self.cats.clone(), self.rats.clone());
-        self.rats = App::move_rats(self.rats.clone(), self.cats.clone());
+        let cats = self.cats.clone();
+        let rats = self.rats.clone();
+        self.cats = Animal::next_states_cats(&cats, &rats);
+        self.rats = Animal::next_states_rats(&cats, &rats);
         
         self.rats = App::eat_rats(self.cats.clone(), self.rats.clone());
     }
