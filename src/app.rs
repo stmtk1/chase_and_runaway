@@ -46,20 +46,12 @@ impl App {
         });
     }
     
-    fn eat_rats(cats: Vec<Animal>, rats: Vec<Animal>) -> Vec<Animal> {
-        let mut new_rats = rats.clone();
-        
-        for cat in &cats {
-            new_rats = cat.eat(new_rats);
-        }
-        new_rats
-    }
 
     pub fn update(&mut self) {
         let cats = self.cats.clone();
         let rats = self.rats.clone();
         self.cats = Animal::next_states_cats(&cats, &rats);
         self.rats = Animal::next_states_rats(&cats, &rats);
-        self.rats = App::eat_rats(self.cats.clone(), self.rats.clone());
+        //self.rats = App::eat_rats(self.cats.clone(), self.rats.clone());
     }
 }

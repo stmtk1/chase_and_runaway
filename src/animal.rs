@@ -8,7 +8,6 @@ const ALIGN_MAX: f64 = 480.0;
 const COHENSION_MAX: f64 = 480.0;
 const ENERGY_MAX: u64 = 1000;
 
-
 #[derive(Clone)]
 pub struct Animal {
     pub x: f64,
@@ -40,6 +39,12 @@ impl Animal{
             cohension_weight: rng.gen::<f64>() * COHENSION_MAX,
             energy: ENERGY_MAX,
         }
+    }
+    
+    pub fn new_rat() -> Animal{
+        let mut ret = Animal::new();
+        ret.velocity = 0.5;
+        ret
     }
     
     pub fn offset(&self, other:&Animal) -> PVector {
@@ -75,6 +80,14 @@ impl Animal{
         ret
     }
     
+    fn eat_rats(cats: &Vec<Animal>, rats: &Vec<Animal>) -> Vec<Animal> {
+        let mut new_rats = rats.clone();
+        for cat in cats {
+            new_rats = cat.after_eat(new_rats);
+        }
+        new_rats
+    }
+    
     fn collect_near_pvectors(&self, animals: &Vec<Animal>, radious: f64) -> Vec<Animal> {
         animals
             .into_iter()
@@ -104,6 +117,7 @@ impl Animal{
         
         self
             .apply_velocity(next_velocity)
+            .eat(rats)
             .move_self()
     }
     
@@ -200,6 +214,7 @@ impl Animal{
         ret.separate_weight = Animal::mutate(self.separate_weight, SEPARATE_MAX);
         ret.align_weight = Animal::mutate(self.align_weight, ALIGN_MAX);
         ret.cohension_weight = Animal::mutate(self.cohension_weight, COHENSION_MAX);
+        ret.velocity = self.velocity;
         ret
     }
     
@@ -227,18 +242,31 @@ impl Animal{
     }
     
     pub fn next_states_rats(cats: &Vec<Animal>, rats: &Vec<Animal>) -> Vec<Animal> {
-        let ret: Vec<Animal> = rats
+        let mut ret = Animal::eat_rats(cats, rats);
+        ret = ret
             .into_iter()
             .map(|rat| rat.run_away(cats))
             .collect();
         Animal::life_manage(&ret)
     }
     
-    pub fn eat(&self, rats: Vec<Animal>) -> Vec<Animal> {
+    pub fn after_eat(&self, rats: Vec<Animal>) -> Vec<Animal> {
      rats
             .into_iter()
-            .filter(|rat| !self.is_within(rat, 1.0) )
+            .filter(|rat| !self.is_within(rat, 1.0))
             .collect()
+    }
+    
+    fn eat(&self, rats: &Vec<Animal>) -> Animal {
+        let mut ret = self.clone();
+        let can_eat = rats
+            .into_iter()
+            .any(|rat| self.is_within(rat, 1.0));
+        println!("{}", can_eat);
+        if can_eat {
+            ret.energy += 300;
+        }
+        ret
     }
     
     fn is_within(&self, other: &Animal, radious: f64) -> bool {

@@ -36,8 +36,8 @@ fn main(){
     }
     
     let mut rats: Vec<Animal> = Vec::with_capacity(100);
-    for _ in 0..100 {
-        rats.push(Animal::new());
+    for _ in 0..200 {
+        rats.push(Animal::new_rat());
     }
     
     let mut app = App {
