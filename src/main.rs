@@ -7,6 +7,7 @@ extern crate graphics;
 mod animal;
 mod pvector;
 mod app;
+mod consts;
 
 use piston::window::WindowSettings;
 use piston::event_loop::*;
@@ -15,11 +16,8 @@ use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
 //use graphics::polygon;
 use animal::Animal;
+use consts::{WIDTH, HEIGHT};
 use app::App;
-
-
-const WIDTH: f64 = 640.0;
-const HEIGHT: f64 = 480.0;
 
 fn main(){
     let opengl = OpenGL::V3_2;

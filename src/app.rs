@@ -60,7 +60,6 @@ impl App {
         let rats = self.rats.clone();
         self.cats = Animal::next_states_cats(&cats, &rats);
         self.rats = Animal::next_states_rats(&cats, &rats);
-        
         self.rats = App::eat_rats(self.cats.clone(), self.rats.clone());
     }
 }

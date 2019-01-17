@@ -1,13 +1,13 @@
 use rand::prelude::*;
 use pvector::PVector;
+use consts::{WIDTH, HEIGHT};
 
-const WIDTH: f64 = 640.0;
-const HEIGHT: f64 = 480.0;
 const CHASE_MAX: f64 = 480.0;
 const SEPARATE_MAX: f64 = 480.0;
 const ALIGN_MAX: f64 = 480.0;
 const COHENSION_MAX: f64 = 480.0;
 const ENERGY_MAX: u64 = 1000;
+
 
 #[derive(Clone)]
 pub struct Animal {
@@ -79,6 +79,7 @@ impl Animal{
         animals
             .into_iter()
             .filter(|animal| animal.is_within(self, radious))
+            .filter(|animal| !(animal.x == self.x && animal.y == self.y))
             .map(|animal| animal.clone())
             .collect()
     }
@@ -121,9 +122,7 @@ impl Animal{
     fn separate_same(&self, same_kind: &Vec<Animal>) -> PVector {
         let near_animal = self.collect_near_pvectors(same_kind, 5.0);
         
-        // 自分自身もカウントされてしまうため1
-        // TODO 自分自身がカウントされないようにする
-        if near_animal.len() <= 1 {
+        if near_animal.len() <= 0 {
             return PVector::zero();
         }
         self
@@ -134,9 +133,7 @@ impl Animal{
     fn align(&self, same_kind: &Vec<Animal>) -> PVector{
         let near_animals = self.collect_near_pvectors(same_kind, 10.0);
         
-        // 自分自身もカウントされてしまうため1
-        // TODO 自分自身がカウントされないようにする
-        if near_animals.len() <= 1 {
+        if near_animals.len() <= 0 {
             return PVector::zero();
         }
         self
@@ -155,9 +152,7 @@ impl Animal{
     fn cohension(&self, same_kind: &Vec<Animal>) -> PVector {
         let near_animals = self.collect_near_pvectors(same_kind, 15.0);
         
-        // 自分自身もカウントされてしまうため1
-        // TODO 自分自身がカウントされないようにする
-        if near_animals.len() <= 1 {
+        if near_animals.len() <= 0 {
             return PVector::zero();
         }
         self
@@ -208,15 +203,14 @@ impl Animal{
         ret
     }
     
-    fn life_manage(animals: Vec<Animal>) -> Vec<Animal> {
+    fn life_manage(animals: &Vec<Animal>) -> Vec<Animal> {
         let mut rng = rand::thread_rng();
         let mut ret: Vec<Animal> = Vec::with_capacity(animals.len() * 2);
         for animal in animals {
             if animal.energy <= 0{
                 continue;
             }
-            // TODO 複製する確率をきちんと決める
-            if rng.gen::<f32>() < 0.0011 {
+            if rng.gen::<f32>() < 1.0 / (ENERGY_MAX as f32) {
                 ret.push(animal.clone().descendant());
             }
             ret.push(animal.clone());
@@ -229,7 +223,7 @@ impl Animal{
             .into_iter()
             .map(|cat| cat.chase(rats, cats))
             .collect();
-        Animal::life_manage(ret)
+        Animal::life_manage(&ret)
     }
     
     pub fn next_states_rats(cats: &Vec<Animal>, rats: &Vec<Animal>) -> Vec<Animal> {
@@ -237,7 +231,7 @@ impl Animal{
             .into_iter()
             .map(|rat| rat.run_away(cats))
             .collect();
-        Animal::life_manage(ret)
+        Animal::life_manage(&ret)
     }
     
     pub fn eat(&self, rats: Vec<Animal>) -> Vec<Animal> {
