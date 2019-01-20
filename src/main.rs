@@ -32,7 +32,7 @@ fn main(){
     
     let mut cats: Vec<Animal> = Vec::with_capacity(100);
     for _ in 0..10 {
-        cats.push(Animal::new());
+        cats.push(Animal::new_cat());
     }
     
     let mut rats: Vec<Animal> = Vec::with_capacity(100);
