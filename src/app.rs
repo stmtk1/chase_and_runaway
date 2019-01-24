@@ -5,6 +5,7 @@ use opengl_graphics::GlGraphics;
 use graphics::{rectangle, clear};
 use graphics::rectangle::square;
 use graphics::Transformed;
+use graphics::context::Context;
 
 // #[derive(Clone)]
 pub struct App {
@@ -30,13 +31,6 @@ impl App {
         self.gl.draw(args.viewport(), |c, gl|{
             clear(App::GREEN, gl);
             
-            for cat in cats{
-                let transform = c.transform
-                    .trans(cat.x, cat.y);
-                rectangle(App::RED, square, transform, gl);
-                //polygon(RED, &TRIANGLE, transform, gl);
-            }
-            
             for rat in rats {
                 let transform = c.transform
                     .trans(rat.x, rat.y);
@@ -44,6 +38,15 @@ impl App {
                 //polygon(BLUE, &TRIANGLE, transform, gl);
             }
         });
+    }
+    
+    fn draw_cat(c: &Context, gl: &mut GlGraphics, cats: &Vec<Animal>){
+        for cat in cats{
+            let transform = c.transform
+                .trans(cat.x, cat.y);
+            rectangle(App::RED, square, transform, gl);
+            //polygon(RED, &TRIANGLE, transform, gl);
+        }
     }
     
 
