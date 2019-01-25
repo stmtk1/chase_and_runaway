@@ -21,8 +21,9 @@ impl App {
     const ANIMAL_SIZE: f64 = 5.0;
     
     pub fn render(&mut self, args: &RenderArgs){
-        let square: [f64; 4] = square(0.0, 0.0, App::ANIMAL_SIZE);
         
+        let square: graphics::types::Rectangle = square(0.0, 0.0, App::ANIMAL_SIZE);
+
         //const TRIANGLE:   &[[f32; 2]; 3] = &[[1.0, 0.0], [0.0, 1.732], [2.0, 1.732]];
 
         let cats = &self.cats;
@@ -31,6 +32,8 @@ impl App {
         self.gl.draw(args.viewport(), |c, gl|{
             clear(App::GREEN, gl);
             
+            App::draw_cat(&c, gl, cats, square);
+
             for rat in rats {
                 let transform = c.transform
                     .trans(rat.x, rat.y);
@@ -39,16 +42,16 @@ impl App {
             }
         });
     }
-    
-    fn draw_cat(c: &Context, gl: &mut GlGraphics, cats: &Vec<Animal>){
-        for cat in cats{
+
+    fn draw_cat(c: &Context, gl: &mut GlGraphics, cats: &Vec<Animal>, square: graphics::types::Rectangle) {
+        for cat in cats {
             let transform = c.transform
                 .trans(cat.x, cat.y);
             rectangle(App::RED, square, transform, gl);
             //polygon(RED, &TRIANGLE, transform, gl);
         }
     }
-    
+
 
     pub fn update(&mut self) {
         let cats = self.cats.clone();
