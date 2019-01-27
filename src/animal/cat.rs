@@ -88,7 +88,6 @@ impl Animal {
         let can_eat = rats
             .into_iter()
             .any(|rat| self.is_within(rat, 1.0));
-        println!("{}", can_eat);
         if can_eat {
             ret.energy += 300;
         }
