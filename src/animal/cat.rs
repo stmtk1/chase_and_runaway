@@ -93,6 +93,7 @@ impl Animal {
             .any(|rat| self.is_within(rat, 1.0));
         if can_eat {
             ret.energy += 300;
+            ret.ate += 1;
         }
         ret
     }

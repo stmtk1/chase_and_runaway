@@ -5,6 +5,9 @@ use rand::prelude::*;
 use pvector::PVector;
 use consts::{WIDTH, HEIGHT};
 use std::collections::LinkedList;
+//use std::collections::linked_list::Iter;
+use std::iter::Iterator;
+use std::iter::FromIterator;
 
 const CHASE_MAX: f64 = 480.0;
 const SEPARATE_MAX: f64 = 480.0;
@@ -24,6 +27,7 @@ pub struct Animal {
     separate_weight: f64,
     align_weight: f64,
     cohension_weight: f64,
+    ate: u32,
     energy: u64,
 }
 
@@ -44,6 +48,7 @@ impl Animal{
             align_weight: rng.gen::<f64>() * ALIGN_MAX,
             cohension_weight: rng.gen::<f64>() * COHENSION_MAX,
             energy: ENERGY_MAX,
+            ate: 0,
         }
     }
     
@@ -124,6 +129,7 @@ impl Animal{
         ret.align_weight = Animal::mutate(self.align_weight, ALIGN_MAX);
         ret.cohension_weight = Animal::mutate(self.cohension_weight, COHENSION_MAX);
         ret.velocity = self.velocity;
+        ret.ate = 0;
         ret
     }
     
@@ -151,5 +157,45 @@ impl Animal{
             x: self.vx,
             y: self.vy,
         }
+    }
+    
+    fn collect_servive(cats: &LinkedList<Animal>) -> LinkedList<Animal> {
+        let len = cats.len();
+        let mut ret: Vec<Animal> = Vec::from_iter(cats.into_iter().map(|a| a.clone()));
+        
+        ret.sort_by(Animal::sort_by_ate);
+         ret
+            .into_iter()
+            .take(len / 10)
+            .collect()
+    }
+    
+    fn sort_by_ate(a1: &Animal, a2: &Animal) -> std::cmp::Ordering {
+        if a1.ate < a2.ate {
+            std::cmp::Ordering::Less
+        } else if a1.ate > a2.ate {
+            std::cmp::Ordering::Greater
+        }else{
+            std::cmp::Ordering::Equal
+        }
+    }
+    
+    pub fn next_generation(cats: &LinkedList<Animal>) -> LinkedList<Animal>{
+        let mut ret: LinkedList<Animal> = LinkedList::new();
+        let mut superior = Animal::collect_servive(cats);
+        while ret.len() < 100 {
+            /*
+            let mut next = &superior
+                .into_iter()
+                .map(|animal| animal.descendant())
+                .collect();
+                */
+            
+            ret.append(&mut superior);
+        }
+        ret
+            .into_iter()
+            .take(100)
+            .collect()
     }
 }

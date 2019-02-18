@@ -1,16 +1,23 @@
 use animal::Animal;
 use piston::input::RenderArgs;
-use opengl_graphics::GlGraphics;
+use consts::{WIDTH, HEIGHT};
+use glutin_window::GlutinWindow as Window;
+//use opengl_graphics::GlGraphics;
 //use graphics::*;
+use piston::window::WindowSettings;
+use opengl_graphics::{ GlGraphics, OpenGL };
 use graphics::{rectangle, clear};
 use graphics::rectangle::square;
 use graphics::Transformed;
 use graphics::context::Context;
 use std::collections::LinkedList;
+use piston::event_loop::*;
+use piston::input::*;
 
 // #[derive(Clone)]
 pub struct App {
     pub gl: GlGraphics,
+    pub window: Window,
     pub cats: LinkedList<Animal>,
     pub rats: LinkedList<Animal>,
 }
@@ -20,6 +27,59 @@ impl App {
     const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
     const BLUE:   [f32; 4] = [0.0, 0.0, 1.0, 1.0];
     const ANIMAL_SIZE: f64 = 5.0;
+    pub fn new() -> App {
+        let opengl = OpenGL::V3_2;
+        let window = App::new_window(opengl);
+        
+        App {
+            gl: GlGraphics::new(opengl),
+            window: window,
+            cats: App::new_cats(),
+            rats: App::new_rats(),
+        }
+    }
+    
+    fn new_cats() -> LinkedList<Animal> {
+        let mut ret: LinkedList<Animal> = LinkedList::new();
+        for _ in 0..10 {
+            ret.push_back(Animal::new_cat());
+        }
+        ret
+    }
+    
+    fn new_rats() -> LinkedList<Animal> {
+        let mut ret: LinkedList<Animal> = LinkedList::new();
+        for _ in 0..200 {
+            ret.push_back(Animal::new_rat());
+        }
+        ret
+    }
+    fn new_window(opengl: OpenGL) -> Window{
+        WindowSettings::new(
+                "spinning-square",
+                [WIDTH as u32, HEIGHT as u32]
+            )
+            .opengl(opengl)
+            .exit_on_esc(true)
+            .build()
+            .unwrap()
+    }
+    
+    pub fn show_window(&mut self){
+        let mut events = Events::new(EventSettings::new());
+        
+        while let Some(e) = events.next(&mut self.window) {
+            if let Some(r) = e.render_args(){ 
+                self.render(&r);
+            }
+            
+            if let Some(_) = e.update_args() {
+                if self.update(){
+                    break
+                }
+            }
+        }
+    }
     
     pub fn render(&mut self, args: &RenderArgs){
         
@@ -67,6 +127,5 @@ impl App {
         self.cats = Animal::next_states_cats(&cats, &rats);
         self.rats = Animal::next_states_rats(&cats, &rats);
         App::is_finished(&rats)
-        //self.rats = App::eat_rats(self.cats.clone(), self.rats.clone());
     }
 }
