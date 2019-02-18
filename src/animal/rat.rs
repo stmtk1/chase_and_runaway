@@ -1,5 +1,6 @@
 use pvector::PVector;
 use animal::Animal;
+use std::collections::LinkedList;
 
 impl Animal {
     pub fn new_rat() -> Animal{
@@ -8,7 +9,7 @@ impl Animal {
         ret
     }
     
-    pub fn next_states_rats(cats: &Vec<Animal>, rats: &Vec<Animal>) -> Vec<Animal> {
+    pub fn next_states_rats(cats: &LinkedList<Animal>, rats: &LinkedList<Animal>) -> LinkedList<Animal> {
         let mut ret = Animal::eat_rats(cats, rats);
         ret = ret
             .into_iter()
@@ -17,14 +18,14 @@ impl Animal {
         Animal::life_manage(&ret)
     }
     
-    pub fn after_eat(&self, rats: Vec<Animal>) -> Vec<Animal> {
+    pub fn after_eat(&self, rats: LinkedList<Animal>) -> LinkedList<Animal> {
      rats
             .into_iter()
             .filter(|rat| !self.is_within(rat, 1.0))
             .collect()
     }
     
-    fn run_away(&self, preyers: &Vec<Animal>) -> Animal {
+    fn run_away(&self, preyers: &LinkedList<Animal>) -> Animal {
         let next_velocity = self
             .as_velocity()
             .add(self.run_away_vector(preyers))
@@ -35,7 +36,7 @@ impl Animal {
             .move_self()
     }
     
-    fn run_away_vector(&self, preyers: &Vec<Animal>) -> PVector {
+    fn run_away_vector(&self, preyers: &LinkedList<Animal>) -> PVector {
         let near_preyer = self.collect_near_pvectors(preyers, 10.0);
         
         if near_preyer.len() <= 0 {

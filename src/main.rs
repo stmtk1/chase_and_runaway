@@ -14,6 +14,7 @@ use piston::event_loop::*;
 use piston::input::*;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
+use std::collections::LinkedList;
 //use graphics::polygon;
 use animal::Animal;
 use consts::{WIDTH, HEIGHT};
@@ -30,14 +31,14 @@ fn main(){
         .build()
         .unwrap();
     
-    let mut cats: Vec<Animal> = Vec::with_capacity(100);
+    let mut cats: LinkedList<Animal> = LinkedList::new();
     for _ in 0..10 {
-        cats.push(Animal::new_cat());
+        cats.push_back(Animal::new_cat());
     }
     
-    let mut rats: Vec<Animal> = Vec::with_capacity(100);
+    let mut rats: LinkedList<Animal> = LinkedList::new();
     for _ in 0..200 {
-        rats.push(Animal::new_rat());
+        rats.push_back(Animal::new_rat());
     }
     
     let mut app = App {

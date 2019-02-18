@@ -6,12 +6,13 @@ use graphics::{rectangle, clear};
 use graphics::rectangle::square;
 use graphics::Transformed;
 use graphics::context::Context;
+use std::collections::LinkedList;
 
 // #[derive(Clone)]
 pub struct App {
     pub gl: GlGraphics,
-    pub cats: Vec<Animal>,
-    pub rats: Vec<Animal>,
+    pub cats: LinkedList<Animal>,
+    pub rats: LinkedList<Animal>,
 }
 
 impl App {
@@ -38,7 +39,7 @@ impl App {
         });
     }
 
-    fn draw_cat(c: &Context, gl: &mut GlGraphics, cats: &Vec<Animal>, square: graphics::types::Rectangle) {
+    fn draw_cat(c: &Context, gl: &mut GlGraphics, cats: &LinkedList<Animal>, square: graphics::types::Rectangle) {
         for cat in cats {
             let transform = c.transform
                 .trans(cat.x, cat.y);
@@ -47,7 +48,7 @@ impl App {
         }
     }
     
-    fn draw_rat(c: &Context, gl: &mut GlGraphics, rats: &Vec<Animal>, square: graphics::types::Rectangle) {
+    fn draw_rat(c: &Context, gl: &mut GlGraphics, rats: &LinkedList<Animal>, square: graphics::types::Rectangle) {
         for rat in rats {
             let transform = c.transform
                 .trans(rat.x, rat.y);

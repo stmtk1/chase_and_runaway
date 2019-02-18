@@ -4,6 +4,7 @@ mod rat;
 use rand::prelude::*;
 use pvector::PVector;
 use consts::{WIDTH, HEIGHT};
+use std::collections::LinkedList;
 
 const CHASE_MAX: f64 = 480.0;
 const SEPARATE_MAX: f64 = 480.0;
@@ -13,6 +14,7 @@ const ENERGY_MAX: u64 = 1000;
 
 #[derive(Clone)]
 pub struct Animal {
+    is_rat: bool,
     pub x: f64,
     pub y: f64,
     velocity: f64,
@@ -30,7 +32,8 @@ impl Animal{
         let mut rng = rand::thread_rng();
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
         let velocity = 1.0;
-        Animal{ 
+        Animal{
+            is_rat: true,
             x: rng.gen::<f64>() * WIDTH, 
             y: rng.gen::<f64>() * HEIGHT,
             velocity: velocity, 
@@ -41,6 +44,13 @@ impl Animal{
             align_weight: rng.gen::<f64>() * ALIGN_MAX,
             cohension_weight: rng.gen::<f64>() * COHENSION_MAX,
             energy: ENERGY_MAX,
+        }
+    }
+    
+    pub fn position(&self) -> PVector {
+        PVector {
+            x: self.x,
+            y: self.y,
         }
     }
     
@@ -78,7 +88,7 @@ impl Animal{
     }
     
     
-    fn collect_near_pvectors(&self, animals: &Vec<Animal>, radious: f64) -> Vec<Animal> {
+    fn collect_near_pvectors(&self, animals: &LinkedList<Animal>, radious: f64) -> LinkedList<Animal> {
         animals
             .into_iter()
             .filter(|animal| animal.is_within(self, radious))
@@ -87,7 +97,7 @@ impl Animal{
             .collect()
     }
     
-    fn calculate_direction(&self, animals: Vec<Animal>) -> PVector {
+    fn calculate_direction(&self, animals: LinkedList<Animal>) -> PVector {
         animals
             .into_iter()
             .map(|animal| animal.offset(self))
@@ -117,17 +127,17 @@ impl Animal{
         ret
     }
     
-    fn life_manage(animals: &Vec<Animal>) -> Vec<Animal> {
+    fn life_manage(animals: &LinkedList<Animal>) -> LinkedList<Animal> {
         let mut rng = rand::thread_rng();
-        let mut ret: Vec<Animal> = Vec::with_capacity(animals.len() * 2);
+        let mut ret: LinkedList<Animal> = LinkedList::new();
         for animal in animals {
             if animal.energy <= 0{
                 continue;
             }
             if rng.gen::<f32>() < 1.0 / (ENERGY_MAX as f32) {
-                ret.push(animal.clone().descendant());
+                ret.push_back(animal.clone().descendant());
             }
-            ret.push(animal.clone());
+            ret.push_back(animal.clone());
         }
         ret
     }

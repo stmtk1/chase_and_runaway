@@ -1,12 +1,15 @@
 use pvector::PVector;
 use animal::Animal;
+use std::collections::LinkedList;
 
 impl Animal {
     pub fn new_cat() -> Animal{
-        Animal::new()
+        let mut ret = Animal::new();
+        ret.is_rat = false;
+        ret
     }
     
-    pub fn eat_rats(cats: &Vec<Animal>, rats: &Vec<Animal>) -> Vec<Animal> {
+    pub fn eat_rats(cats: &LinkedList<Animal>, rats: &LinkedList<Animal>) -> LinkedList<Animal> {
         let mut new_rats = rats.clone();
         for cat in cats {
             new_rats = cat.after_eat(new_rats);
@@ -14,7 +17,7 @@ impl Animal {
         new_rats
     }
     
-    pub fn chase(&self, rats: &Vec<Animal>, cats: &Vec<Animal>) -> Animal {
+    pub fn chase(&self, rats: &LinkedList<Animal>, cats: &LinkedList<Animal>) -> Animal {
         let next_velocity = self
             .as_velocity()
             .add(self.chase_vector(rats))
@@ -30,7 +33,7 @@ impl Animal {
             .move_self()
     }
     
-    fn chase_vector(&self, preyers: &Vec<Animal>) -> PVector {
+    fn chase_vector(&self, preyers: &LinkedList<Animal>) -> PVector {
         let near_preyer = self.collect_near_pvectors(preyers, 10.0);
         
         if near_preyer.len() <= 0 {
@@ -42,7 +45,7 @@ impl Animal {
             .mult(-1.0 * self.chase_weight)
     }
     
-    fn separate_same(&self, same_kind: &Vec<Animal>) -> PVector {
+    fn separate_same(&self, same_kind: &LinkedList<Animal>) -> PVector {
         let near_animal = self.collect_near_pvectors(same_kind, 5.0);
         
         if near_animal.len() <= 0 {
@@ -53,7 +56,7 @@ impl Animal {
             .mult(self.separate_weight)
     }
     
-    fn align(&self, same_kind: &Vec<Animal>) -> PVector{
+    fn align(&self, same_kind: &LinkedList<Animal>) -> PVector{
         let near_animals = self.collect_near_pvectors(same_kind, 10.0);
         
         if near_animals.len() <= 0 {
@@ -64,7 +67,7 @@ impl Animal {
             .mult(self.align_weight)
     }
     
-    fn add_velocity(&self, animals: &Vec<Animal>) -> PVector {
+    fn add_velocity(&self, animals: &LinkedList<Animal>) -> PVector {
         animals
             .into_iter()
             .map(|animal| animal.as_velocity())
@@ -72,7 +75,7 @@ impl Animal {
             .normalize()
     }
     
-    fn cohension(&self, same_kind: &Vec<Animal>) -> PVector {
+    fn cohension(&self, same_kind: &LinkedList<Animal>) -> PVector {
         let near_animals = self.collect_near_pvectors(same_kind, 15.0);
         
         if near_animals.len() <= 0 {
@@ -83,7 +86,7 @@ impl Animal {
             .mult(-1.0 * self.cohension_weight)
     }
     
-    fn eat(&self, rats: &Vec<Animal>) -> Animal {
+    fn eat(&self, rats: &LinkedList<Animal>) -> Animal {
         let mut ret = self.clone();
         let can_eat = rats
             .into_iter()
@@ -94,8 +97,8 @@ impl Animal {
         ret
     }
     
-    pub fn next_states_cats(cats: &Vec<Animal>, rats: &Vec<Animal>) -> Vec<Animal> {
-        let ret: Vec<Animal> = cats
+    pub fn next_states_cats(cats: &LinkedList<Animal>, rats: &LinkedList<Animal>) -> LinkedList<Animal> {
+        let ret: LinkedList<Animal> = cats
             .into_iter()
             .map(|cat| cat.chase(rats, cats))
             .collect();
