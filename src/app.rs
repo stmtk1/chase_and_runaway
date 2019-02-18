@@ -57,12 +57,16 @@ impl App {
         }
     }
 
+    fn is_finished(rats: &LinkedList<Animal>) -> bool {
+        rats.len() == 0
+    }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self)  -> bool {
         let cats = self.cats.clone();
         let rats = self.rats.clone();
         self.cats = Animal::next_states_cats(&cats, &rats);
         self.rats = Animal::next_states_rats(&cats, &rats);
+        App::is_finished(&rats)
         //self.rats = App::eat_rats(self.cats.clone(), self.rats.clone());
     }
 }

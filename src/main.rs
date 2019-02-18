@@ -55,8 +55,9 @@ fn main(){
         }
         
         if let Some(_) = e.update_args() {
-            app.update();
+            if app.update(){
+                break
+            }
         }
     }
 }
-
