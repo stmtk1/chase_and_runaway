@@ -9,10 +9,20 @@ mod pvector;
 mod app;
 mod consts;
 
+use opengl_graphics::OpenGL;
 use app::App;
 
 fn main(){
+        print!("gen,");
+        print!("chase,");
+        print!("align,");
+        print!("cohension,");
+        print!("separate");
+        println!("");
     let mut app = App::new();
-    app.show_window();
-    
+    for i in 1..100 {
+        app.show_window();
+        app.print_params(i);
+        app.next_generation();
+    }
 }

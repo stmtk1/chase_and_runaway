@@ -2,8 +2,6 @@ use animal::Animal;
 use piston::input::RenderArgs;
 use consts::{WIDTH, HEIGHT};
 use glutin_window::GlutinWindow as Window;
-//use opengl_graphics::GlGraphics;
-//use graphics::*;
 use piston::window::WindowSettings;
 use opengl_graphics::{ GlGraphics, OpenGL };
 use graphics::{rectangle, clear};
@@ -30,7 +28,6 @@ impl App {
     pub fn new() -> App {
         let opengl = OpenGL::V3_2;
         let window = App::new_window(opengl);
-        
         App {
             gl: GlGraphics::new(opengl),
             window: window,
@@ -65,6 +62,20 @@ impl App {
             .unwrap()
     }
     
+    pub fn next_generation(&mut self){
+        //let window = App::new_window(opengl);
+        self.cats = Animal::next_generation(&self.cats);
+        self.rats = App::new_rats();
+        /*
+        App {
+            gl: self.gl,
+            window: self.window,
+            cats: ,
+            rats: App::new_rats(),
+        }
+        */
+    }
+    
     pub fn show_window(&mut self){
         let mut events = Events::new(EventSettings::new());
         
@@ -77,6 +88,9 @@ impl App {
                 if self.update(){
                     break
                 }
+            }
+            if self.update() {
+                break
             }
         }
     }
@@ -98,6 +112,7 @@ impl App {
 
         });
     }
+    
 
     fn draw_cat(c: &Context, gl: &mut GlGraphics, cats: &LinkedList<Animal>, square: graphics::types::Rectangle) {
         for cat in cats {
@@ -120,6 +135,34 @@ impl App {
     fn is_finished(rats: &LinkedList<Animal>) -> bool {
         rats.len() == 0
     }
+    
+    fn chase_average(animals: &LinkedList<Animal>) -> f64 {
+        animals
+            .into_iter()
+            .fold(0.0, |a, b| a + b.chase_weight)
+            / animals.len() as f64
+    }
+    
+    fn align_average(animals: &LinkedList<Animal>) -> f64 {
+        animals
+            .into_iter()
+            .fold(0.0, |a, b| a + b.align_weight)
+            / animals.len() as f64
+    }
+    
+    fn separate_average(animals: &LinkedList<Animal>) -> f64 {
+        animals
+            .into_iter()
+            .fold(0.0, |a, b| a + b.separate_weight)
+            / animals.len() as f64
+    }
+    
+    fn cohension_average(animals: &LinkedList<Animal>) -> f64 {
+        animals
+            .into_iter()
+            .fold(0.0, |a, b| a + b.cohension_weight) 
+            / animals.len() as f64
+    }
 
     pub fn update(&mut self)  -> bool {
         let cats = self.cats.clone();
@@ -127,5 +170,22 @@ impl App {
         self.cats = Animal::next_states_cats(&cats, &rats);
         self.rats = Animal::next_states_rats(&cats, &rats);
         App::is_finished(&rats)
+    }
+    
+    fn max(a: f64, b: f64) -> f64 {
+        if a < b {
+            a
+        }else{
+            b
+        }
+    }
+    
+    pub fn print_params(&self, ord: i32) {
+        print!("{},", ord);
+        print!("{},", App::chase_average(&self.cats));
+        print!("{},", App::align_average(&self.cats));
+        print!("{},", App::cohension_average(&self.cats));
+        print!("{}",  App::separate_average(&self.cats));
+        println!("");
     }
 }

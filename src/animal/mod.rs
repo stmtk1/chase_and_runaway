@@ -5,7 +5,6 @@ use rand::prelude::*;
 use pvector::PVector;
 use consts::{WIDTH, HEIGHT};
 use std::collections::LinkedList;
-//use std::collections::linked_list::Iter;
 use std::iter::Iterator;
 use std::iter::FromIterator;
 
@@ -23,10 +22,10 @@ pub struct Animal {
     velocity: f64,
     vx: f64,
     vy: f64,
-    chase_weight: f64,
-    separate_weight: f64,
-    align_weight: f64,
-    cohension_weight: f64,
+    pub chase_weight: f64,
+    pub separate_weight: f64,
+    pub align_weight: f64,
+    pub cohension_weight: f64,
     ate: u32,
     energy: u64,
 }
@@ -119,7 +118,7 @@ impl Animal{
     
     fn mutate(value: f64, value_max: f64) -> f64{
         let mut rng = rand::thread_rng();
-        (rng.gen::<f64>() * 2.0 - 1.0 + value).min(value_max).max(0.0)
+        (rng.gen::<f64>() * 20.0 - 10.0 + value).min(value_max).max(0.0)
     }
     
     fn descendant(&self) -> Animal{
@@ -182,20 +181,20 @@ impl Animal{
     
     pub fn next_generation(cats: &LinkedList<Animal>) -> LinkedList<Animal>{
         let mut ret: LinkedList<Animal> = LinkedList::new();
-        let mut superior = Animal::collect_servive(cats);
-        while ret.len() < 100 {
-            /*
-            let mut next = &superior
+        let superior = Animal::collect_servive(cats);
+        while ret.len() < 20 {
+            let mut appended = superior
+                .clone()
                 .into_iter()
                 .map(|animal| animal.descendant())
                 .collect();
-                */
             
-            ret.append(&mut superior);
+            ret.append(&mut appended);
         }
+        
         ret
             .into_iter()
-            .take(100)
+            .take(20)
             .collect()
     }
 }
