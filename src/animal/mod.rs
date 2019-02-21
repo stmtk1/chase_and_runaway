@@ -15,8 +15,7 @@ const COHENSION_MAX: f64 = 480.0;
 const ENERGY_MAX: u64 = 1000;
 
 #[derive(Clone)]
-pub struct Animal {
-    is_rat: bool,
+pub struct Cat{
     pub x: f64,
     pub y: f64,
     velocity: f64,
@@ -30,6 +29,24 @@ pub struct Animal {
     energy: u64,
 }
 
+#[derive(Clone)]
+pub struct Rat{
+    pub x: f64,
+    pub y: f64,
+    velocity: f64,
+    vx: f64,
+    vy: f64,
+    energy: u64,
+}
+pub trait Animal {
+    fn new() -> Self;
+    fn next_states(cats: &LinkedList<Cat>, rats: &LinkedList<Rat>) -> LinkedList<Self> where Self: std::marker::Sized;
+    fn move_self(&self) -> Self;
+    fn as_velocity(&self) -> PVector;
+    fn apply_velocity(&self, PVector) -> Self;
+}
+
+/*
 impl Animal{
     fn new() -> Animal{
         let mut rng = rand::thread_rng();
@@ -62,33 +79,6 @@ impl Animal{
         let self_vec = PVector { x: self.x, y: self.y };
         let other_vec = PVector { x: other.x, y: other.y };
         self_vec.offset(other_vec)
-    }
-    
-    fn move_self(&self) -> Animal {
-        let mut new_x = self.x + self.vx;
-        let mut new_y = self.y + self.vy;
-        let mut ret = self.clone();
-        
-        if new_x > WIDTH {
-            new_x -= WIDTH;
-        }
-        
-        if new_x < 0.0 {
-            new_x += WIDTH;
-        }
-        
-        if new_y > HEIGHT {
-            new_y -= HEIGHT;
-        }
-        
-        if new_y < 0.0 {
-            new_y += HEIGHT;
-        }
-        
-        ret.energy -= 1;
-        ret.x = new_x;
-        ret.y = new_y;
-        ret
     }
     
     
@@ -151,13 +141,6 @@ impl Animal{
         self.offset(other).len() < radious
     }
     
-    fn as_velocity(&self) -> PVector {
-        PVector {
-            x: self.vx,
-            y: self.vy,
-        }
-    }
-    
     fn collect_servive(cats: &LinkedList<Animal>) -> LinkedList<Animal> {
         let len = cats.len();
         let mut ret: Vec<Animal> = Vec::from_iter(cats.into_iter().map(|a| a.clone()));
@@ -198,3 +181,4 @@ impl Animal{
             .collect()
     }
 }
+*/
