@@ -1,7 +1,6 @@
 use pvector::PVector;
 use animal::{Animal, Rat, Cat};
 use consts::{WIDTH, HEIGHT};
-use std::collections::LinkedList;
 use rand::prelude::*;
 
 const ENERGY_MAX: u64 = 1000;
@@ -22,7 +21,7 @@ impl Animal for Rat {
         }
     }
 
-    fn next_states(cats: &LinkedList<Cat>, rats: &LinkedList<Rat>) -> LinkedList<Self> {
+    fn next_states(cats: &Vec<Cat>, rats: &Vec<Rat>) -> Vec<Self> {
         let alive_rats = Rat::delete_eaten(cats, rats);
         let ret = alive_rats
             .into_iter()
@@ -89,7 +88,7 @@ impl Animal for Rat {
         self_vec.offset(other_vec)
     }
     
-    fn collect_near_pvectors<T: Animal>(&self, animals: &LinkedList<T>, radious: f64) -> LinkedList<T> {
+    fn collect_near_pvectors<T: Animal>(&self, animals: &Vec<T>, radious: f64) -> Vec<T> {
         animals
             .into_iter()
             .filter(|animal| animal.is_within(self, radious))
@@ -98,7 +97,7 @@ impl Animal for Rat {
             .collect()
     }
     
-    fn calculate_direction<T: Animal>(&self, animals: LinkedList<T>) -> PVector {
+    fn calculate_direction<T: Animal>(&self, animals: Vec<T>) -> PVector {
         animals
             .into_iter()
             .map(|animal| self.offset(&animal))
@@ -116,17 +115,17 @@ impl Animal for Rat {
         self.id
     }
     
-    fn life_manage(animals: &LinkedList<Self>) -> LinkedList<Self> {
+    fn life_manage(animals: &Vec<Self>) -> Vec<Self> {
         let mut rng = rand::thread_rng();
-        let mut ret: LinkedList<Self> = LinkedList::new();
+        let mut ret: Vec<Self> = Vec::new();
         for animal in animals {
             if animal.energy <= 0{
                 continue;
             }
             if rng.gen::<f32>() < 1.0 / (ENERGY_MAX as f32) {
-                ret.push_back(animal.clone().descendant());
+                ret.push(animal.clone().descendant());
             }
-            ret.push_back(animal.clone());
+            ret.push(animal.clone());
         }
         ret
     }
@@ -143,7 +142,7 @@ impl std::cmp::PartialEq for Rat {
 }
 
 impl Rat {
-    fn run_away(&self, cats: &LinkedList<Cat>) -> Rat {
+    fn run_away(&self, cats: &Vec<Cat>) -> Rat {
         let next_velocity = self
             .as_velocity()
             .add(self.run_away_vector(cats))
@@ -154,7 +153,7 @@ impl Rat {
             .move_self()
     }
     
-    fn run_away_vector(&self, cats: &LinkedList<Cat>) -> PVector {
+    fn run_away_vector(&self, cats: &Vec<Cat>) -> PVector {
         let near_cats = self.collect_near_pvectors(cats, 10.0);
         
         if near_cats.len() <= 0 {
@@ -166,13 +165,13 @@ impl Rat {
             .mult(-1.0)
     }
     
-    fn eaten(&self, cats: &LinkedList<Cat>) -> bool{
+    fn eaten(&self, cats: &Vec<Cat>) -> bool{
         cats
             .into_iter()
             .any(|cat| self.is_within(cat, 1.0))
     }
     
-    fn delete_eaten(cats: &LinkedList<Cat>, rats: &LinkedList<Rat>) -> LinkedList<Rat> {
+    fn delete_eaten(cats: &Vec<Cat>, rats: &Vec<Rat>) -> Vec<Rat> {
         rats
             .into_iter()
             .filter(|rat| !rat.eaten(cats))

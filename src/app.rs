@@ -8,7 +8,6 @@ use graphics::{rectangle, clear};
 use graphics::rectangle::square;
 use graphics::Transformed;
 use graphics::context::Context;
-use std::collections::LinkedList;
 use piston::event_loop::*;
 use piston::input::*;
 
@@ -16,8 +15,8 @@ use piston::input::*;
 pub struct App {
     pub gl: GlGraphics,
     pub window: Window,
-    pub cats: LinkedList<Cat>,
-    pub rats: LinkedList<Rat>,
+    pub cats: Vec<Cat>,
+    pub rats: Vec<Rat>,
 }
 
 impl App {
@@ -36,18 +35,18 @@ impl App {
         }
     }
     
-    fn new_cats() -> LinkedList<Cat> {
-        let mut ret: LinkedList<Cat> = LinkedList::new();
+    fn new_cats() -> Vec<Cat> {
+        let mut ret: Vec<Cat> = Vec::new();
         for _ in 0..10 {
-            ret.push_back(<Cat as Animal>::new());
+            ret.push(<Cat as Animal>::new());
         }
         ret
     }
     
-    fn new_rats() -> LinkedList<Rat> {
-        let mut ret: LinkedList<Rat> = LinkedList::new();
+    fn new_rats() -> Vec<Rat> {
+        let mut ret: Vec<Rat> = Vec::new();
         for _ in 0..200 {
-            ret.push_back(<Rat as Animal>::new());
+            ret.push(<Rat as Animal>::new());
         }
         ret
     }
@@ -65,14 +64,6 @@ impl App {
     pub fn next_generation(&mut self){
         self.cats = Cat::next_generation(&self.cats);
         self.rats = App::new_rats();
-        /*
-        App {
-            gl: self.gl,
-            window: self.window,
-            cats: Cat::next_generation(&self.cats),
-            rats: App::new_rats(),
-        }
-        */
     }
     
     pub fn show_window(&mut self){
@@ -110,7 +101,7 @@ impl App {
     }
     
 
-    fn draw_cat(c: &Context, gl: &mut GlGraphics, cats: &LinkedList<Cat>, square: graphics::types::Rectangle) {
+    fn draw_cat(c: &Context, gl: &mut GlGraphics, cats: &Vec<Cat>, square: graphics::types::Rectangle) {
         for cat in cats {
             let transform = c.transform
                 .trans(cat.x, cat.y);
@@ -119,7 +110,7 @@ impl App {
         }
     }
     
-    fn draw_rat(c: &Context, gl: &mut GlGraphics, rats: &LinkedList<Rat>, square: graphics::types::Rectangle) {
+    fn draw_rat(c: &Context, gl: &mut GlGraphics, rats: &Vec<Rat>, square: graphics::types::Rectangle) {
         for rat in rats {
             let transform = c.transform
                 .trans(rat.x, rat.y);
@@ -128,32 +119,32 @@ impl App {
         }
     }
 
-    fn is_finished(rats: &LinkedList<Rat>) -> bool {
+    fn is_finished(rats: &Vec<Rat>) -> bool {
         rats.len() == 0
     }
     
-    fn chase_average(animals: &LinkedList<Cat>) -> f64 {
+    fn chase_average(animals: &Vec<Cat>) -> f64 {
         animals
             .into_iter()
             .fold(0.0, |a, b| a + b.chase_weight)
             / animals.len() as f64
     }
     
-    fn align_average(animals: &LinkedList<Cat>) -> f64 {
+    fn align_average(animals: &Vec<Cat>) -> f64 {
         animals
             .into_iter()
             .fold(0.0, |a, b| a + b.align_weight)
             / animals.len() as f64
     }
     
-    fn separate_average(animals: &LinkedList<Cat>) -> f64 {
+    fn separate_average(animals: &Vec<Cat>) -> f64 {
         animals
             .into_iter()
             .fold(0.0, |a, b| a + b.separate_weight)
             / animals.len() as f64
     }
     
-    fn cohension_average(animals: &LinkedList<Cat>) -> f64 {
+    fn cohension_average(animals: &Vec<Cat>) -> f64 {
         animals
             .into_iter()
             .fold(0.0, |a, b| a + b.cohension_weight) 

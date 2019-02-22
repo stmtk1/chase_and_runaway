@@ -1,7 +1,6 @@
 use pvector::PVector;
 use consts::{WIDTH, HEIGHT};
 use animal::{Animal, Cat, Rat};
-use std::collections::LinkedList;
 use rand::prelude::*;
 
 const CHASE_MAX: f64 = 480.0;
@@ -31,8 +30,8 @@ impl Animal for Cat {
         }
     }
     
-    fn next_states(cats: &LinkedList<Cat>, rats: &LinkedList<Rat>) -> LinkedList<Self> {
-        let ret: LinkedList<Cat> = cats
+    fn next_states(cats: &Vec<Cat>, rats: &Vec<Rat>) -> Vec<Self> {
+        let ret: Vec<Cat> = cats
             .into_iter()
             .map(|cat| cat.chase(cats, rats))
             .collect();
@@ -99,7 +98,7 @@ impl Animal for Cat {
         }
     }
     
-    fn collect_near_pvectors<T: Animal>(&self, animals: &LinkedList<T>, radious: f64) -> LinkedList<T> {
+    fn collect_near_pvectors<T: Animal>(&self, animals: &Vec<T>, radious: f64) -> Vec<T> {
         animals
             .into_iter()
             .filter(|animal| animal.is_within(self, radious))
@@ -108,7 +107,7 @@ impl Animal for Cat {
             .collect()
     }
     
-    fn calculate_direction<T: Animal>(&self, animals: LinkedList<T>) -> PVector {
+    fn calculate_direction<T: Animal>(&self, animals: Vec<T>) -> PVector {
         animals
             .into_iter()
             .map(|animal| self.offset(&animal))
@@ -127,17 +126,17 @@ impl Animal for Cat {
         ret
     }
     
-    fn life_manage(animals: &LinkedList<Self>) -> LinkedList<Self> {
+    fn life_manage(animals: &Vec<Self>) -> Vec<Self> {
         let mut rng = rand::thread_rng();
-        let mut ret: LinkedList<Self> = LinkedList::new();
+        let mut ret: Vec<Self> = Vec::new();
         for animal in animals {
             if animal.energy <= 0{
                 continue;
             }
             if rng.gen::<f32>() < 1.0 / (ENERGY_MAX as f32) {
-                ret.push_back(animal.clone().descendant());
+                ret.push(animal.clone().descendant());
             }
-            ret.push_back(animal.clone());
+            ret.push(animal.clone());
         }
         ret
     }
@@ -152,7 +151,7 @@ impl Animal for Cat {
 }
 
 impl Cat{
-    pub fn chase(&self, cats: &LinkedList<Cat>, rats: &LinkedList<Rat>) -> Cat{
+    pub fn chase(&self, cats: &Vec<Cat>, rats: &Vec<Rat>) -> Cat{
         let next_velocity = self
             .as_velocity()
             .add(self.chase_vector(rats))
@@ -168,7 +167,7 @@ impl Cat{
             .move_self()
     }
     
-    fn chase_vector(&self, rats: &LinkedList<Rat>) -> PVector {
+    fn chase_vector(&self, rats: &Vec<Rat>) -> PVector {
         let near_rats = self.collect_near_pvectors(rats, 10.0);
         
         if near_rats.len() <= 0 {
@@ -178,10 +177,9 @@ impl Cat{
         self
             .calculate_direction(near_rats)
             .mult(self.chase_weight)
-        //PVector::zero()
     }
     
-    fn separate_same(&self, cats: &LinkedList<Cat>) -> PVector {
+    fn separate_same(&self, cats: &Vec<Cat>) -> PVector {
         let near_animal = self.collect_near_pvectors(cats, 5.0);
         
         if near_animal.len() <= 0 {
@@ -192,7 +190,7 @@ impl Cat{
             .mult(-1.0 * self.separate_weight)
     }
     
-    fn align(&self, cats: &LinkedList<Cat>) -> PVector{
+    fn align(&self, cats: &Vec<Cat>) -> PVector{
         let near_cats = self.collect_near_pvectors(cats, 10.0);
         
         if near_cats.len() <= 0 {
@@ -203,7 +201,7 @@ impl Cat{
             .mult(self.align_weight)
     }
     
-    fn cohension(&self, same_kind: &LinkedList<Cat>) -> PVector {
+    fn cohension(&self, same_kind: &Vec<Cat>) -> PVector {
         let near_animals = self.collect_near_pvectors(same_kind, 15.0);
         
         if near_animals.len() <= 0 {
@@ -214,7 +212,7 @@ impl Cat{
             .mult(self.cohension_weight)
     }
     
-    fn eat(&self, rats: &LinkedList<Rat>) -> Cat {
+    fn eat(&self, rats: &Vec<Rat>) -> Cat {
         let mut ret = self.clone();
         let can_eat = rats
             .into_iter()
@@ -226,7 +224,7 @@ impl Cat{
         ret
     }
     
-    fn add_velocity(&self, animals: &LinkedList<Cat>) -> PVector {
+    fn add_velocity(&self, animals: &Vec<Cat>) -> PVector {
         animals
             .into_iter()
             .map(|animal| animal.as_velocity())
@@ -237,5 +235,64 @@ impl Cat{
     fn mutate(value: f64, value_max: f64) -> f64{
         let mut rng = rand::thread_rng();
         (rng.gen::<f64>() * 20.0 - 10.0 + value).min(value_max).max(0.0)
+    }
+    
+    fn collect_servive(cats: &Vec<Cat>) -> Vec<Cat> {
+        let len = cats.len();
+        let mut ret = cats.clone();
+        ret.sort_by(Cat::comp_by_ate);
+         ret
+            .into_iter()
+            .take(len / 10)
+            .collect()
+    }
+    
+    fn comp_by_ate(a1: &Cat, a2: &Cat) -> std::cmp::Ordering {
+        if a1.ate < a2.ate {
+            std::cmp::Ordering::Less
+        } else if a1.ate > a2.ate {
+            std::cmp::Ordering::Greater
+        }else{
+            std::cmp::Ordering::Equal
+        }
+    }
+    
+    fn comp_by_x(a1: &Cat, a2: &Cat) -> std::cmp::Ordering {
+        if a1.x < a2.x {
+            std::cmp::Ordering::Less
+        } else if a1.x > a2.x {
+            std::cmp::Ordering::Greater
+        }else{
+            std::cmp::Ordering::Equal
+        }
+    }
+    
+    fn comp_by_y(a1: &Cat, a2: &Cat) -> std::cmp::Ordering {
+        if a1.y < a2.y {
+            std::cmp::Ordering::Less
+        } else if a1.y > a2.y {
+            std::cmp::Ordering::Greater
+        }else{
+            std::cmp::Ordering::Equal
+        }
+    }
+    
+    pub fn next_generation(cats: &Vec<Cat>) -> Vec<Cat>{
+        let mut ret: Vec<Cat> = Vec::new();
+        let superior = Cat::collect_servive(cats);
+        while ret.len() < 20 {
+            let mut appended = superior
+                .clone()
+                .into_iter()
+                .map(|animal| animal.descendant())
+                .collect();
+            
+            ret.append(&mut appended);
+        }
+        
+        ret
+            .into_iter()
+            .take(20)
+            .collect()
     }
 }
