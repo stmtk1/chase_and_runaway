@@ -20,12 +20,6 @@ pub struct App {
     pub rats: LinkedList<Rat>,
 }
 
-const CHASE_MAX: f64 = 480.0;
-const SEPARATE_MAX: f64 = 480.0;
-const ALIGN_MAX: f64 = 480.0;
-const COHENSION_MAX: f64 = 480.0;
-const ENERGY_MAX: u64 = 1000;
-
 impl App {
     const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
     const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
@@ -69,14 +63,13 @@ impl App {
     }
     
     pub fn next_generation(&mut self){
-        //let window = App::new_window(opengl);
-        /*
-        self.cats = Animal::next_generation(&self.cats);
+        self.cats = Cat::next_generation(&self.cats);
         self.rats = App::new_rats();
+        /*
         App {
             gl: self.gl,
             window: self.window,
-            cats: ,
+            cats: Cat::next_generation(&self.cats),
             rats: App::new_rats(),
         }
         */
@@ -172,7 +165,7 @@ impl App {
         let rats = self.rats.clone();
         self.cats = <Cat as Animal>::next_states(&cats, &rats);
         self.rats = <Rat as Animal>::next_states(&cats, &rats);
-        App::is_finished(&rats)
+        App::is_finished(&self.rats)
     }
     
     fn max(a: f64, b: f64) -> f64 {

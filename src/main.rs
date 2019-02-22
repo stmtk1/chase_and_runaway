@@ -10,7 +10,6 @@ mod app;
 mod consts;
 //mod kd_tree;
 
-use opengl_graphics::OpenGL;
 use app::App;
 
 fn main(){

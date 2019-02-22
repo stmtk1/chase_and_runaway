@@ -75,3 +75,9 @@ impl PVector {
         }
     }
 }
+
+impl std::cmp::PartialEq for PVector {
+    fn eq(&self, other: &PVector) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+}

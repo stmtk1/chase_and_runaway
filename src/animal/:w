@@ -27,7 +27,6 @@ impl Animal for Cat {
             cohension_weight: rng.gen::<f64>() * COHENSION_MAX,
             energy: ENERGY_MAX,
             ate: 0,
-            id: rng.gen::<u64>(),
         }
     }
     
@@ -36,7 +35,8 @@ impl Animal for Cat {
             .into_iter()
             .map(|cat| cat.chase(cats, rats))
             .collect();
-        <Cat as Animal>::life_manage(&ret)
+        ret
+        //Animal::life_manage(&ret)
     }
     
     fn move_self(&self) -> Cat {
@@ -61,7 +61,9 @@ impl Animal for Cat {
         }
         
         ret.energy -= 1;
-        
+        if(ret.energy <= 0){
+            ret.energy = 0;
+        }
         ret.x = new_x;
         ret.y = new_y;
         ret
@@ -81,11 +83,11 @@ impl Animal for Cat {
         ret
     }
     
-    fn is_within<T: Animal>(&self, other: &T, radious: f64) -> bool {
+    fn is_within<T>(&self, other: &T, radious: f64) -> bool where T: Animal{
         self.offset(other).len() < radious
     }
     
-    fn offset<T: Animal>(&self, other: &T) -> PVector {
+    fn offset<T>(&self, other: &T) -> PVector where T: Animal{
         let self_vec = self.position();
         let other_vec = other.position();
         self_vec.offset(other_vec)
@@ -99,55 +101,28 @@ impl Animal for Cat {
         }
     }
     
-    fn collect_near_pvectors<T: Animal>(&self, animals: &LinkedList<T>, radious: f64) -> LinkedList<T> {
+    fn collect_near_pvectors<T>(&self, animals: &LinkedList<T>, radious: f64) -> LinkedList<T> where T: Animal {
         animals
             .into_iter()
             .filter(|animal| animal.is_within(self, radious))
-            .filter(|animal| !animal.is_same(self))
+            .filter(|animal| !(self.position() == animal.position()))
             .map(|animal| animal.clone())
             .collect()
     }
-    
-    fn calculate_direction<T: Animal>(&self, animals: LinkedList<T>) -> PVector {
-        animals
-            .into_iter()
-            .map(|animal| self.offset(&animal))
-            .fold(PVector::zero(), |folded, vector| vector.add(folded))
-            .normalize()
-    }
-    
-    fn descendant(&self) -> Self{
-        let mut ret = Cat::new();
-        ret.chase_weight = Cat::mutate(self.chase_weight, CHASE_MAX);
-        ret.separate_weight = Cat::mutate(self.separate_weight, SEPARATE_MAX);
-        ret.align_weight = Cat::mutate(self.align_weight, ALIGN_MAX);
-        ret.cohension_weight = Cat::mutate(self.cohension_weight, COHENSION_MAX);
-        ret.velocity = self.velocity;
-        ret.ate = 0;
-        ret
-    }
-    
-    fn life_manage(animals: &LinkedList<Self>) -> LinkedList<Self> {
-        let mut rng = rand::thread_rng();
-        let mut ret: LinkedList<Self> = LinkedList::new();
-        for animal in animals {
-            if animal.energy <= 0{
-                continue;
-            }
-            if rng.gen::<f32>() < 1.0 / (ENERGY_MAX as f32) {
-                ret.push_back(animal.clone().descendant());
-            }
-            ret.push_back(animal.clone());
+    fn clone(&self) -> Self {
+        Cat {
+            x: self.x, 
+            y: self.y,
+            velocity: self.velocity, 
+            vx: self.vx, 
+            vy: self.vy,
+            chase_weight: self.chase_weight,
+            separate_weight: self.separate_weight,
+            align_weight: self.align_weight,
+            cohension_weight: self.cohension_weight,
+            energy: self.energy,
+            ate: self.ate,
         }
-        ret
-    }
-    
-    fn is_same<T: Animal>(&self, other: &T) -> bool{
-        self.id() == other.id()
-    }
-    
-    fn id(&self) -> u64 {
-        self.id
     }
 }
 
@@ -164,7 +139,7 @@ impl Cat{
         
         self
             .apply_velocity(next_velocity)
-            .eat(rats)
+            //.eat(rats)
             .move_self()
     }
     
@@ -177,33 +152,48 @@ impl Cat{
         
         self
             .calculate_direction(near_rats)
-            .mult(self.chase_weight)
+            .mult(-1.0 * self.chase_weight)
         //PVector::zero()
     }
     
-    fn separate_same(&self, cats: &LinkedList<Cat>) -> PVector {
-        let near_animal = self.collect_near_pvectors(cats, 5.0);
+    fn calculate_direction(&self, animals: LinkedList<Rat>) -> PVector {
+        animals
+            .into_iter()
+            .map(|animal| self.offset(&animal))
+            .fold(PVector::zero(), |folded, vector| vector.add(folded))
+            .normalize()
+    }
+    
+    fn separate_same(&self, same_kind: &LinkedList<Cat>) -> PVector {
+        /*
+        let near_animal = self.collect_near_pvectors(same_kind, 5.0);
         
         if near_animal.len() <= 0 {
             return PVector::zero();
         }
         self
             .calculate_direction(near_animal)
-            .mult(-1.0 * self.separate_weight)
+            .mult(self.separate_weight)
+            */
+        PVector::zero()
     }
     
-    fn align(&self, cats: &LinkedList<Cat>) -> PVector{
-        let near_cats = self.collect_near_pvectors(cats, 10.0);
+    fn align(&self, same_kind: &LinkedList<Cat>) -> PVector{
+        /*
+        let near_animals = self.collect_near_pvectors(same_kind, 10.0);
         
-        if near_cats.len() <= 0 {
+        if near_animals.len() <= 0 {
             return PVector::zero();
         }
         self
-            .add_velocity(&near_cats)
+            .add_velocity(&near_animals)
             .mult(self.align_weight)
+            */
+        PVector::zero()
     }
     
     fn cohension(&self, same_kind: &LinkedList<Cat>) -> PVector {
+        /*
         let near_animals = self.collect_near_pvectors(same_kind, 15.0);
         
         if near_animals.len() <= 0 {
@@ -211,7 +201,9 @@ impl Cat{
         }
         self
             .calculate_direction(near_animals)
-            .mult(self.cohension_weight)
+            .mult(-1.0 * self.cohension_weight)
+            */
+        PVector::zero()
     }
     
     fn eat(&self, rats: &LinkedList<Rat>) -> Cat {
@@ -225,8 +217,27 @@ impl Cat{
         }
         ret
     }
+}
+
+/*
+impl Animal {
+    pub fn new_cat() -> Animal{
+        let mut ret = Animal::new();
+        ret.is_rat = false;
+        ret
+    }
     
-    fn add_velocity(&self, animals: &LinkedList<Cat>) -> PVector {
+    pub fn eat_rats(cats: &LinkedList<Animal>, rats: &LinkedList<Animal>) -> LinkedList<Animal> {
+        let mut new_rats = rats.clone();
+        for cat in cats {
+            new_rats = cat.after_eat(new_rats);
+        }
+        new_rats
+    }
+    
+    }
+    
+    fn add_velocity(&self, animals: &LinkedList<Animal>) -> PVector {
         animals
             .into_iter()
             .map(|animal| animal.as_velocity())
@@ -234,8 +245,16 @@ impl Cat{
             .normalize()
     }
     
-    fn mutate(value: f64, value_max: f64) -> f64{
-        let mut rng = rand::thread_rng();
-        (rng.gen::<f64>() * 20.0 - 10.0 + value).min(value_max).max(0.0)
+    fn cohension(&self, same_kind: &LinkedList<Animal>) -> PVector {
+        let near_animals = self.collect_near_pvectors(same_kind, 15.0);
+        
+        if near_animals.len() <= 0 {
+            return PVector::zero();
+        }
+        self
+            .calculate_direction(near_animals)
+            .mult(-1.0 * self.cohension_weight)
     }
+    
 }
+*/

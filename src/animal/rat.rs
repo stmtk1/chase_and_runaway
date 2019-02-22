@@ -10,7 +10,7 @@ impl Animal for Rat {
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        let velocity = 1.0;
+        let velocity = 0.5;
         Rat {
             x: rng.gen::<f64>() * WIDTH, 
             y: rng.gen::<f64>() * HEIGHT,
@@ -18,17 +18,17 @@ impl Animal for Rat {
             vx: theta.cos() * velocity, 
             vy: theta.sin() * velocity,
             energy: ENERGY_MAX,
+            id: rng.gen::<u64>(),
         }
     }
 
     fn next_states(cats: &LinkedList<Cat>, rats: &LinkedList<Rat>) -> LinkedList<Self> {
-        //let mut ret = Animal::eat_rats(cats, rats);
-        let ret = rats
+        let alive_rats = Rat::delete_eaten(cats, rats);
+        let ret = alive_rats
             .into_iter()
             .map(|rat| rat.run_away(cats))
             .collect();
-        ret
-        //Animal::life_manage(&ret)
+        <Rat as Animal>::life_manage(&ret)
     }
     
     fn move_self(&self) -> Rat {
@@ -72,23 +72,81 @@ impl Animal for Rat {
         ret
     }
     
-    /*
-    fn collect_near_pvectors(&self, animals: &LinkedList<Cat>, radious: f64) -> LinkedList<Cat> {
+    fn is_within<T: Animal>(&self, other: &T, radious: f64) -> bool {
+        self.offset(other).len() < radious
+    }
+    
+    fn position(&self) -> PVector{
+        PVector{
+            x: self.x,
+            y: self.y,
+        }
+    }
+    
+    fn offset<T: Animal>(&self, other: &T) -> PVector {
+        let self_vec = self.position();
+        let other_vec = other.position();
+        self_vec.offset(other_vec)
+    }
+    
+    fn collect_near_pvectors<T: Animal>(&self, animals: &LinkedList<T>, radious: f64) -> LinkedList<T> {
         animals
             .into_iter()
             .filter(|animal| animal.is_within(self, radious))
-            .filter(|animal| !(animal.x == self.x && animal.y == self.y))
+            .filter(|animal| !animal.is_same(self))
             .map(|animal| animal.clone())
             .collect()
     }
-    */
+    
+    fn calculate_direction<T: Animal>(&self, animals: LinkedList<T>) -> PVector {
+        animals
+            .into_iter()
+            .map(|animal| self.offset(&animal))
+            .fold(PVector::zero(), |folded, vector| vector.add(folded))
+            .normalize()
+    }
+    
+    fn descendant(&self) -> Self{
+        let mut ret = Rat::new();
+        ret.velocity = self.velocity;
+        ret
+    }
+    
+    fn id(&self) -> u64 {
+        self.id
+    }
+    
+    fn life_manage(animals: &LinkedList<Self>) -> LinkedList<Self> {
+        let mut rng = rand::thread_rng();
+        let mut ret: LinkedList<Self> = LinkedList::new();
+        for animal in animals {
+            if animal.energy <= 0{
+                continue;
+            }
+            if rng.gen::<f32>() < 1.0 / (ENERGY_MAX as f32) {
+                ret.push_back(animal.clone().descendant());
+            }
+            ret.push_back(animal.clone());
+        }
+        ret
+    }
+    
+    fn is_same<T: Animal>(&self, other: &T) -> bool{
+        self.id() == other.id()
+    }
+}
+
+impl std::cmp::PartialEq for Rat {
+    fn eq(&self, other: &Rat) -> bool {
+        self.id == other.id
+    }
 }
 
 impl Rat {
     fn run_away(&self, cats: &LinkedList<Cat>) -> Rat {
         let next_velocity = self
             .as_velocity()
-            //.add(self.run_away_vector(preyers))
+            .add(self.run_away_vector(cats))
             .normalize()
             .mult(self.velocity);
         self
@@ -97,29 +155,28 @@ impl Rat {
     }
     
     fn run_away_vector(&self, cats: &LinkedList<Cat>) -> PVector {
-        /*
-        let near_preyer = self.collect_near_pvectors(preyers, 10.0);
+        let near_cats = self.collect_near_pvectors(cats, 10.0);
         
-        if near_preyer.len() <= 0 {
+        if near_cats.len() <= 0 {
             return PVector::zero();
         }
         
         self
-            .calculate_direction(near_preyer)
-            */
-        PVector::zero()
+            .calculate_direction(near_cats)
+            .mult(-1.0)
     }
-}
-
-/*
-impl Animal {
     
-    pub fn after_eat(&self, rats: LinkedList<Animal>) -> LinkedList<Animal> {
-     rats
+    fn eaten(&self, cats: &LinkedList<Cat>) -> bool{
+        cats
             .into_iter()
-            .filter(|rat| !self.is_within(rat, 1.0))
+            .any(|cat| self.is_within(cat, 1.0))
+    }
+    
+    fn delete_eaten(cats: &LinkedList<Cat>, rats: &LinkedList<Rat>) -> LinkedList<Rat> {
+        rats
+            .into_iter()
+            .filter(|rat| !rat.eaten(cats))
+            .map(|rat| rat.clone())
             .collect()
     }
-    
-    
-*/
+}
