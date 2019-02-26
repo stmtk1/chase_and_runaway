@@ -1,4 +1,5 @@
 mod cat;
+//mod test;
 mod rat;
 
 use pvector::PVector;
@@ -35,7 +36,7 @@ pub trait Animal : Clone {
     fn next_states(cats: &Vec<Cat>, rats: &Vec<Rat>) -> Vec<Self> where Self: std::marker::Sized;
     fn move_self(&self) -> Self;
     fn as_velocity(&self) -> PVector;
-    fn apply_velocity(&self, PVector) -> Self;
+    fn apply_velocity(&self, &PVector) -> Self;
     fn is_within<T: Animal>(&self, other: &T, radious: f64) -> bool;
     fn offset<T: Animal>(&self, other: &T) -> PVector;
     fn collect_near_pvectors<T: Animal>(&self, animals: &Vec<T>, radious: f64) -> Vec<T>;

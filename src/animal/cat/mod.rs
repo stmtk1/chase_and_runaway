@@ -1,19 +1,23 @@
+mod test;
+
 use pvector::PVector;
-use consts::{WIDTH, HEIGHT};
+use consts::*;
 use animal::{Animal, Cat, Rat};
 use rand::prelude::*;
 
+/*
 const CHASE_MAX: f64 = 480.0;
 const SEPARATE_MAX: f64 = 480.0;
 const ALIGN_MAX: f64 = 480.0;
 const COHENSION_MAX: f64 = 480.0;
 const ENERGY_MAX: u64 = 1000;
+*/
 
 impl Animal for Cat {
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        let velocity = 1.0;
+        let velocity = CAT_VELOCITY;
         Cat {
             x: rng.gen::<f64>() * WIDTH, 
             y: rng.gen::<f64>() * HEIGHT,
@@ -73,7 +77,7 @@ impl Animal for Cat {
         }
     }
     
-    fn apply_velocity(&self, pvector: PVector) -> Self {
+    fn apply_velocity(&self, pvector: &PVector) -> Self {
         let mut ret = self.clone();
         ret.vx = pvector.x;
         ret.vy = pvector.y;
@@ -89,7 +93,6 @@ impl Animal for Cat {
         let other_vec = other.position();
         self_vec.offset(other_vec)
     }
-    
     
     fn position(&self) -> PVector{
         PVector{
@@ -162,13 +165,13 @@ impl Cat{
             .mult(self.velocity);
         
         self
-            .apply_velocity(next_velocity)
+            .apply_velocity(&next_velocity)
             .eat(rats)
             .move_self()
     }
     
     fn chase_vector(&self, rats: &Vec<Rat>) -> PVector {
-        let near_rats = self.collect_near_pvectors(rats, 10.0);
+        let near_rats = self.collect_near_pvectors(rats, CHASE_RADIOUS);
         
         if near_rats.len() <= 0 {
             return PVector::zero();
@@ -180,7 +183,7 @@ impl Cat{
     }
     
     fn separate_same(&self, cats: &Vec<Cat>) -> PVector {
-        let near_animal = self.collect_near_pvectors(cats, 5.0);
+        let near_animal = self.collect_near_pvectors(cats, SEPARATE_RADIOUS);
         
         if near_animal.len() <= 0 {
             return PVector::zero();
@@ -191,7 +194,7 @@ impl Cat{
     }
     
     fn align(&self, cats: &Vec<Cat>) -> PVector{
-        let near_cats = self.collect_near_pvectors(cats, 10.0);
+        let near_cats = self.collect_near_pvectors(cats, ALIGN_RADIOUS);
         
         if near_cats.len() <= 0 {
             return PVector::zero();
@@ -202,7 +205,7 @@ impl Cat{
     }
     
     fn cohension(&self, same_kind: &Vec<Cat>) -> PVector {
-        let near_animals = self.collect_near_pvectors(same_kind, 15.0);
+        let near_animals = self.collect_near_pvectors(same_kind, COHENSION_RADIOUS);
         
         if near_animals.len() <= 0 {
             return PVector::zero();
@@ -216,9 +219,9 @@ impl Cat{
         let mut ret = self.clone();
         let can_eat = rats
             .into_iter()
-            .any(|rat| self.is_within(rat, 1.0));
+            .any(|rat| self.is_within(rat, EATEN_RADIOUS));
         if can_eat {
-            ret.energy += 300;
+            ret.energy += EAT_ENERGY;
             ret.ate += 1;
         }
         ret
@@ -234,7 +237,7 @@ impl Cat{
     
     fn mutate(value: f64, value_max: f64) -> f64{
         let mut rng = rand::thread_rng();
-        (rng.gen::<f64>() * 20.0 - 10.0 + value).min(value_max).max(0.0)
+        (rng.gen::<f64>() * MUTATE_ABS * 2.0 - MUTATE_ABS + value).min(value_max).max(0.0)
     }
     
     fn collect_servive(cats: &Vec<Cat>) -> Vec<Cat> {
@@ -296,3 +299,4 @@ impl Cat{
             .collect()
     }
 }
+

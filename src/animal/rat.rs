@@ -1,9 +1,9 @@
 use pvector::PVector;
 use animal::{Animal, Rat, Cat};
-use consts::{WIDTH, HEIGHT};
+use consts::*;
 use rand::prelude::*;
 
-const ENERGY_MAX: u64 = 1000;
+//const ENERGY_MAX: u64 = 1000;
 
 impl Animal for Rat {
     fn new() -> Self {
@@ -64,7 +64,7 @@ impl Animal for Rat {
         }
     }
     
-    fn apply_velocity(&self, pvector: PVector) -> Self {
+    fn apply_velocity(&self, pvector: &PVector) -> Self {
         let mut ret = self.clone();
         ret.vx = pvector.x;
         ret.vy = pvector.y;
@@ -149,7 +149,7 @@ impl Rat {
             .normalize()
             .mult(self.velocity);
         self
-            .apply_velocity(next_velocity)
+            .apply_velocity(&next_velocity)
             .move_self()
     }
     
