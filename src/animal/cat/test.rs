@@ -10,7 +10,7 @@ mod tests{
     }
     
     fn is_near(a: f64, b: f64) -> bool {
-        ((a - b) / b).abs() < 1.0e-6
+        ((a - b) / b).abs() < 1.0e-9
     }
     
     #[test]
@@ -21,7 +21,6 @@ mod tests{
             assert!(0.0 < cat.x && cat.x < WIDTH);
             assert!(0.0 < cat.y && cat.y < HEIGHT);
             assert_eq!(cat.velocity, CAT_VELOCITY);
-            assert!((vel_size - CAT_VELOCITY).abs() / CAT_VELOCITY < 1.0e-6);
             assert!(is_near(vel_size, CAT_VELOCITY));
             assert!(0.0 < cat.chase_weight && cat.chase_weight <  CHASE_MAX);
             assert!(0.0 < cat.separate_weight && cat.separate_weight <  SEPARATE_MAX);
@@ -107,8 +106,8 @@ mod tests{
         let dy = 2.0;
         setpos(&mut cat2, &PVector{x: cat1.x + dx, y: cat1.y + dy});
         let offset = cat1.offset(&cat2);
-        assert_eq!(dx, offset.x);
-        assert_eq!(dy, offset.y);
+        assert!(is_near(dx, offset.x));
+        assert!(is_near(dy, offset.y));
     }
     
     #[test]

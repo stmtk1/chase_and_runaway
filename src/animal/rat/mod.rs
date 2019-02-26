@@ -1,3 +1,5 @@
+mod test;
+
 use pvector::PVector;
 use animal::{Animal, Rat, Cat};
 use consts::*;
@@ -9,7 +11,7 @@ impl Animal for Rat {
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        let velocity = 0.5;
+        let velocity = RAT_VELOCITY;
         Rat {
             x: rng.gen::<f64>() * WIDTH, 
             y: rng.gen::<f64>() * HEIGHT,
@@ -106,9 +108,7 @@ impl Animal for Rat {
     }
     
     fn descendant(&self) -> Self{
-        let mut ret = Rat::new();
-        ret.velocity = self.velocity;
-        ret
+        Rat::new()
     }
     
     fn id(&self) -> u64 {
@@ -135,12 +135,6 @@ impl Animal for Rat {
     }
 }
 
-impl std::cmp::PartialEq for Rat {
-    fn eq(&self, other: &Rat) -> bool {
-        self.id == other.id
-    }
-}
-
 impl Rat {
     fn run_away(&self, cats: &Vec<Cat>) -> Rat {
         let next_velocity = self
@@ -154,7 +148,7 @@ impl Rat {
     }
     
     fn run_away_vector(&self, cats: &Vec<Cat>) -> PVector {
-        let near_cats = self.collect_near_pvectors(cats, 10.0);
+        let near_cats = self.collect_near_pvectors(cats, RUNAWAY_RADIOUS);
         
         if near_cats.len() <= 0 {
             return PVector::zero();
