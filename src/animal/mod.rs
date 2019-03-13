@@ -6,11 +6,8 @@ use pvector::PVector;
 
 #[derive(Clone)]
 pub struct Cat{
-    pub x: f64,
-    pub y: f64,
-    velocity: f64,
-    vx: f64,
-    vy: f64,
+    position: PVector,
+    velocity: PVector,
     pub chase_weight: f64,
     pub separate_weight: f64,
     pub align_weight: f64,
@@ -22,11 +19,8 @@ pub struct Cat{
 
 #[derive(Clone)]
 pub struct Rat{
-    pub x: f64,
-    pub y: f64,
-    velocity: f64,
-    vx: f64,
-    vy: f64,
+    position: PVector,
+    velocity: PVector,
     energy: u64,
     id: u64,
 }

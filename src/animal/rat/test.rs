@@ -5,8 +5,7 @@ mod tests{
     use pvector::PVector;
     
     fn setpos(animal: &mut Rat, pos: &PVector){
-        animal.x = pos.x;
-        animal.y = pos.y;
+        animal.position = pos.clone();
     }
     
     fn is_near(a: f64, b: f64) -> bool {
@@ -17,10 +16,10 @@ mod tests{
     fn rat_new_test(){
         for _ in 0..100{
             let rat = <Rat as Animal>::new();
-            let vel_size = (rat.vx * rat.vx + rat.vy * rat.vy).sqrt();
-            assert!(0.0 < rat.x && rat.x < WIDTH);
-            assert!(0.0 < rat.y && rat.y < HEIGHT);
-            assert_eq!(rat.velocity, RAT_VELOCITY);
+            let vel_size = rat.velocity.len();
+            assert!(0.0 < rat.position.x && rat.position.x < WIDTH);
+            assert!(0.0 < rat.position.y && rat.position.y < HEIGHT);
+            assert!(is_near(rat.velocity.len(), RAT_VELOCITY));
             assert!(is_near(vel_size, RAT_VELOCITY));
             assert_eq!(rat.energy, ENERGY_MAX);
         }
@@ -28,6 +27,8 @@ mod tests{
     
     #[test]
     fn rat_move_self_test(){
+        let position = PVector::new(50.0, 100.0);
+        let velocity = PVector::new(4.0, 2.0);
         let x = 50.0;
         let y = 100.0;
         let vx = 4.0;
@@ -35,51 +36,50 @@ mod tests{
         let energy = 100;
         let mut rat = <Rat as Animal>::new();
         
-        setpos(&mut rat, &PVector{x: x, y: y});
-        rat = rat.apply_velocity(&PVector{x: vx, y: vy});
+        setpos(&mut rat, &position);
+        rat = rat.apply_velocity(&velocity);
         
         rat.energy = energy;
         
         rat = rat.move_self();
         
-        assert_eq!(energy - 1, rat.energy);
         // 画面の外にはみ出さない場合
-        assert_eq!(x + vx, rat.x);
-        assert_eq!(y + vy, rat.y);
+        assert_eq!(x + vx, rat.position.x);
+        assert_eq!(y + vy, rat.position.y);
         
         // 画面の右側にはみ出す場合
-       rat.x = WIDTH - vx + 1.0;
-       assert_eq!(1.0, rat.move_self().x);
+       rat.position.x = WIDTH - vx + 1.0;
+       assert_eq!(1.0, rat.move_self().position.x);
        
         // 画面の左側にはみ出す場合
-       rat.vx *= -1.0;
-       rat.x = 1.0;
-       assert_eq!(WIDTH - vx + 1.0, rat.move_self().x);
+       rat.velocity.x *= -1.0;
+       rat.position.x = 1.0;
+       assert_eq!(WIDTH - vx + 1.0, rat.move_self().position.x);
        
         // 画面の下側にはみ出す場合
-        rat.y = HEIGHT - vy + 1.0;
-        assert_eq!(1.0, rat.move_self().y);
+        rat.position.y = HEIGHT - vy + 1.0;
+        assert_eq!(1.0, rat.move_self().position.y);
         
         // 画面の上側にはみ出す場合
-       rat.vy *= -1.0;
-       rat.y = 1.0;
-       assert_eq!(HEIGHT - vy + 1.0, rat.move_self().y);
+       rat.velocity.y *= -1.0;
+       rat.position.y = 1.0;
+       assert_eq!(HEIGHT - vy + 1.0, rat.move_self().position.y);
     }
     
     #[test]
     fn rat_as_velocity_test(){
         let rat = <Rat as Animal>::new();
         let vel = rat.as_velocity();
-        assert_eq!(rat.vx, vel.x);
-        assert_eq!(rat.vy, vel.y);
+        assert_eq!(rat.velocity.x, vel.x);
+        assert_eq!(rat.velocity.y, vel.y);
     }
     
     #[test]
     fn rat_apply_velocity_test(){
         let vel = PVector{x: 100.0, y: 200.0};
         let rat = <Rat as Animal>::new().apply_velocity(&vel);
-        assert_eq!(rat.vx, vel.x);
-        assert_eq!(rat.vy, vel.y);
+        assert_eq!(rat.velocity.x, vel.x);
+        assert_eq!(rat.velocity.y, vel.y);
     }
     
     #[test]
@@ -87,8 +87,8 @@ mod tests{
         let rat1 = <Rat as Animal>::new();
         let mut rat2 = <Rat as Animal>::new();
         let diff = 1.0;
-        rat2.x = rat1.x + diff;
-        rat2.y = rat1.y;
+        let offset = PVector::new(diff, 0.0);
+        rat2.position = rat1.position.add(offset);
         assert!(rat1.is_within(&rat2, diff + 0.5));
         assert!(!rat1.is_within(&rat2, diff - 0.5));
     }
@@ -99,7 +99,8 @@ mod tests{
         let mut rat2 = <Rat as Animal>::new();
         let dx = 1.0;
         let dy = 2.0;
-        setpos(&mut rat2, &PVector{x: rat1.x + dx, y: rat1.y + dy});
+        let offset = PVector::new(dx, dy);
+        setpos(&mut rat2, &rat1.position.add(offset));
         let offset = rat1.offset(&rat2);
         assert_eq!(dx, offset.x);
         assert_eq!(dy, offset.y);
@@ -109,8 +110,8 @@ mod tests{
     fn rat_postion_test(){
         let rat = <Rat as Animal>::new();
         let pos = rat.position();
-        assert_eq!(rat.x, pos.x);
-        assert_eq!(rat.y, pos.y);
+        assert_eq!(rat.position.x, pos.x);
+        assert_eq!(rat.position.y, pos.y);
     }
     
     #[test]
@@ -132,11 +133,10 @@ mod tests{
         let parent = <Rat as Animal>::new();
         for _ in 0..100 {
             let child = parent.descendant();
-            assert_eq!(parent.velocity, child.velocity);
+            assert!(is_near(parent.velocity.len(), child.velocity.len()));
             // TODO vxとvyのテスト
-            assert_ne!(parent.x, child.x);
-            assert_ne!(parent.y, child.y);
-            assert!(is_near((child.vx * child.vx + child.vy * child.vy).sqrt(), child.velocity));
+            assert_ne!(parent.position.x, child.position.x);
+            assert_ne!(parent.position.y, child.position.y);
         }
     }
     
@@ -167,7 +167,8 @@ mod tests{
         let dy = 0.8;
         let rat = <Rat as Animal>::new();
         let mut other = <Rat as Animal>::new();
-        setpos(&mut other, &PVector{x: rat.x + dx, y: rat.y + dy});
+        let mut offset = PVector::new(dx, dy);
+        setpos(&mut other, &rat.position.add(offset));
         let mut arg = Vec::with_capacity(100);
         for _ in 0..100{
             arg.push(other.clone());
@@ -184,7 +185,8 @@ mod tests{
         let diff = 1.0;
         // 近くにいない場合
         let mut other = <Rat as Animal>::new();
-        setpos(&mut other, &PVector{x: rat.x + diff, y: rat.y + diff});
+        let offset = PVector::new(diff, diff);
+        setpos(&mut other, &rat.position.add(offset));
         let mut rats: Vec<Rat> = Vec::with_capacity(100);
         for _ in 0..100{
             rats.push(other.clone());
@@ -204,7 +206,7 @@ mod tests{
         let runaway_diff = RUNAWAY_RADIOUS / 2.0;
         let x = 0.6;
         let y = 0.8;
-        setpos(&mut rat, &PVector{x: cat.x + runaway_diff * x, y: cat.y + runaway_diff * y});
+        setpos(&mut rat, &PVector::new(runaway_diff * x, runaway_diff * y).add(cat.position()));
         let mut cats: Vec<Cat> = Vec::with_capacity(100);
         for _ in 0..100 {
             cats.push(cat.clone());
@@ -215,7 +217,7 @@ mod tests{
         assert!(is_near(y, result.y));
         
         let not_chase_diff = CHASE_RADIOUS;
-        setpos(&mut rat, &PVector{x: cat.x + not_chase_diff, y: cat.y + not_chase_diff});
+        setpos(&mut rat, &PVector::new(not_chase_diff, not_chase_diff).add(cat.position()));
         
         let not_chase = rat.run_away_vector(&cats);
         assert_eq!(not_chase.x, 0.0);
@@ -227,12 +229,12 @@ mod tests{
         let mut rat = <Rat as Animal>::new();
         let cat = <Cat as Animal>::new();
         let eaten_diff = EATEN_RADIOUS / 2.0;
-        setpos(&mut rat, &PVector{x: cat.x + eaten_diff, y: cat.y + eaten_diff});
+        setpos(&mut rat, &PVector::new(eaten_diff, eaten_diff).add(cat.position()));
         let mut cats: Vec<Cat> = Vec::with_capacity(1);
         cats.push(cat.clone());
         
         let not_eaten_diff = EATEN_RADIOUS;
-        setpos(&mut rat, &PVector{x: cat.x + not_eaten_diff, y: cat.y + not_eaten_diff});
+        setpos(&mut rat, &PVector::new(not_eaten_diff, not_eaten_diff).add(cat.position()));
         assert!(!rat.eaten(&cats));
     }
     
@@ -241,7 +243,7 @@ mod tests{
         let mut rat = <Rat as Animal>::new();
         let cat = <Cat as Animal>::new();
         let eaten_diff = EATEN_RADIOUS / 2.0;
-        setpos(&mut rat, &PVector{x: cat.x + eaten_diff, y: cat.y + eaten_diff});
+        setpos(&mut rat, &PVector::new(eaten_diff, eaten_diff).add(cat.position()));
         let mut cats: Vec<Cat> = Vec::with_capacity(1);
         cats.push(cat.clone());
         let mut rats: Vec<Rat> = Vec::with_capacity(100);
@@ -251,7 +253,7 @@ mod tests{
         assert_eq!(Rat::delete_eaten(&cats, &rats).len(), 0);
         
         let not_eaten_diff = EATEN_RADIOUS;
-        setpos(&mut rat, &PVector{x: cat.x + not_eaten_diff, y: cat.y + not_eaten_diff});
+        setpos(&mut rat, &PVector::new(not_eaten_diff, not_eaten_diff).add(cat.position()));
         rats.clear();
         for _ in 0..100 {
             rats.push(rat.clone());

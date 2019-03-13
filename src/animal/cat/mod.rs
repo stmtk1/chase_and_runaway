@@ -5,25 +5,16 @@ use consts::*;
 use animal::{Animal, Cat, Rat};
 use rand::prelude::*;
 
-/*
-const CHASE_MAX: f64 = 480.0;
-const SEPARATE_MAX: f64 = 480.0;
-const ALIGN_MAX: f64 = 480.0;
-const COHENSION_MAX: f64 = 480.0;
-const ENERGY_MAX: u64 = 1000;
-*/
-
 impl Animal for Cat {
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
-        let velocity = CAT_VELOCITY;
+        let velocity = PVector::new(theta.cos(), theta.sin()).mult(CAT_VELOCITY);
+        let x = rng.gen::<f64>() * WIDTH;
+        let y = rng.gen::<f64>() * HEIGHT;
         Cat {
-            x: rng.gen::<f64>() * WIDTH, 
-            y: rng.gen::<f64>() * HEIGHT,
+            position: PVector::new(x, y),
             velocity: velocity, 
-            vx: theta.cos() * velocity, 
-            vy: theta.sin() * velocity,
             chase_weight: rng.gen::<f64>() * CHASE_MAX,
             separate_weight: rng.gen::<f64>() * SEPARATE_MAX,
             align_weight: rng.gen::<f64>() * ALIGN_MAX,
@@ -43,44 +34,38 @@ impl Animal for Cat {
     }
     
     fn move_self(&self) -> Cat {
-        let mut new_x = self.x + self.vx;
-        let mut new_y = self.y + self.vy;
+        let mut new_pos = self.position().add(self.as_velocity());
         let mut ret = self.clone();
         
-        if new_x > WIDTH {
-            new_x -= WIDTH;
+        if new_pos.x > WIDTH {
+            new_pos.x -= WIDTH;
         }
         
-        if new_x < 0.0 {
-            new_x += WIDTH;
+        if new_pos.x < 0.0 {
+            new_pos.x += WIDTH;
         }
         
-        if new_y > HEIGHT {
-            new_y -= HEIGHT;
+        if new_pos.y > HEIGHT {
+            new_pos.y -= HEIGHT;
         }
         
-        if new_y < 0.0 {
-            new_y += HEIGHT;
+        if new_pos.y < 0.0 {
+            new_pos.y += HEIGHT;
         }
         
         ret.energy -= 1;
         
-        ret.x = new_x;
-        ret.y = new_y;
+        ret.position = new_pos;
         ret
     }
     
     fn as_velocity(&self) -> PVector {
-        PVector {
-            x: self.vx,
-            y: self.vy,
-        }
+        self.velocity.clone()
     }
     
     fn apply_velocity(&self, pvector: &PVector) -> Self {
         let mut ret = self.clone();
-        ret.vx = pvector.x;
-        ret.vy = pvector.y;
+        ret.velocity = pvector.clone();
         ret
     }
     
@@ -95,10 +80,7 @@ impl Animal for Cat {
     }
     
     fn position(&self) -> PVector{
-        PVector{
-            x: self.x,
-            y: self.y,
-        }
+        self.position.clone()
     }
     
     fn collect_near_pvectors<T: Animal>(&self, animals: &Vec<T>, radious: f64) -> Vec<T> {
@@ -124,7 +106,6 @@ impl Animal for Cat {
         ret.separate_weight = Cat::mutate(self.separate_weight, SEPARATE_MAX);
         ret.align_weight = Cat::mutate(self.align_weight, ALIGN_MAX);
         ret.cohension_weight = Cat::mutate(self.cohension_weight, COHENSION_MAX);
-        ret.velocity = self.velocity;
         ret.ate = 0;
         ret
     }
@@ -162,7 +143,7 @@ impl Cat{
             .add(self.align(cats))
             .add(self.cohension(cats))
             .normalize()
-            .mult(self.velocity);
+            .mult(self.velocity.len());
         
         self
             .apply_velocity(&next_velocity)
@@ -261,9 +242,9 @@ impl Cat{
     }
     
     fn comp_by_x(a1: &Cat, a2: &Cat) -> std::cmp::Ordering {
-        if a1.x < a2.x {
+        if a1.position().x < a2.position().x {
             std::cmp::Ordering::Less
-        } else if a1.x > a2.x {
+        } else if a1.position().x > a2.position().x {
             std::cmp::Ordering::Greater
         }else{
             std::cmp::Ordering::Equal
@@ -271,9 +252,9 @@ impl Cat{
     }
     
     fn comp_by_y(a1: &Cat, a2: &Cat) -> std::cmp::Ordering {
-        if a1.y < a2.y {
+        if a1.position().y < a2.position().y {
             std::cmp::Ordering::Less
-        } else if a1.y > a2.y {
+        } else if a1.position().y > a2.position().y {
             std::cmp::Ordering::Greater
         }else{
             std::cmp::Ordering::Equal

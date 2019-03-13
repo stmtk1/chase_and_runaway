@@ -5,19 +5,17 @@ use animal::{Animal, Rat, Cat};
 use consts::*;
 use rand::prelude::*;
 
-//const ENERGY_MAX: u64 = 1000;
 
 impl Animal for Rat {
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
+        let x = rng.gen::<f64>() * WIDTH;
+        let y = rng.gen::<f64>() * HEIGHT;
         let velocity = RAT_VELOCITY;
         Rat {
-            x: rng.gen::<f64>() * WIDTH, 
-            y: rng.gen::<f64>() * HEIGHT,
-            velocity: velocity, 
-            vx: theta.cos() * velocity, 
-            vy: theta.sin() * velocity,
+            position: PVector::new(x, y),
+            velocity: PVector::new(theta.cos(), theta.sin()).mult(velocity),
             energy: ENERGY_MAX,
             id: rng.gen::<u64>(),
         }
@@ -33,43 +31,37 @@ impl Animal for Rat {
     }
     
     fn move_self(&self) -> Rat {
-        let mut new_x = self.x + self.vx;
-        let mut new_y = self.y + self.vy;
         let mut ret = self.clone();
+        let mut new_pos = ret.position.add(self.clone().velocity);
         
-        if new_x > WIDTH {
-            new_x -= WIDTH;
+        if new_pos.x > WIDTH {
+            new_pos.x -= WIDTH;
         }
         
-        if new_x < 0.0 {
-            new_x += WIDTH;
+        if new_pos.x < 0.0 {
+            new_pos.x += WIDTH;
         }
         
-        if new_y > HEIGHT {
-            new_y -= HEIGHT;
+        if new_pos.y > HEIGHT {
+            new_pos.y -= HEIGHT;
         }
         
-        if new_y < 0.0 {
-            new_y += HEIGHT;
+        if new_pos.y < 0.0 {
+            new_pos.y += HEIGHT;
         }
         
-        ret.energy -= 1;
-        ret.x = new_x;
-        ret.y = new_y;
+        //ret.energy -= 1;
+        ret.position = new_pos;
         ret
     }
     
     fn as_velocity(&self) -> PVector {
-        PVector {
-            x: self.vx,
-            y: self.vy,
-        }
+        self.velocity.clone()
     }
     
     fn apply_velocity(&self, pvector: &PVector) -> Self {
         let mut ret = self.clone();
-        ret.vx = pvector.x;
-        ret.vy = pvector.y;
+        ret.velocity = pvector.clone();
         ret
     }
     
@@ -78,10 +70,7 @@ impl Animal for Rat {
     }
     
     fn position(&self) -> PVector{
-        PVector{
-            x: self.x,
-            y: self.y,
-        }
+        self.position.clone()
     }
     
     fn offset<T: Animal>(&self, other: &T) -> PVector {
@@ -108,7 +97,9 @@ impl Animal for Rat {
     }
     
     fn descendant(&self) -> Self{
-        Rat::new()
+        let mut ret = Rat::new();
+        ret.energy = ENERGY_MAX;
+        ret
     }
     
     fn id(&self) -> u64 {
@@ -141,7 +132,7 @@ impl Rat {
             .as_velocity()
             .add(self.run_away_vector(cats))
             .normalize()
-            .mult(self.velocity);
+            .mult(self.velocity.len());
         self
             .apply_velocity(&next_velocity)
             .move_self()

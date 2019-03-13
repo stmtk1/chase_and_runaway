@@ -1,13 +1,19 @@
 const WIDTH: f64 = 640.0;
 const HEIGHT: f64 = 480.0;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PVector {
     pub x: f64,
     pub y: f64,
 }
 
 impl PVector {
+    pub fn new(x: f64, y:f64) -> PVector{
+        PVector{
+            x: x,
+            y: y,
+        }
+    }
     pub fn len(&self) -> f64 {
         (self.x * self.x + self.y * self.y).sqrt()
     }

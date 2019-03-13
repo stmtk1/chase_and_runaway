@@ -104,7 +104,7 @@ impl App {
     fn draw_cat(c: &Context, gl: &mut GlGraphics, cats: &Vec<Cat>, square: graphics::types::Rectangle) {
         for cat in cats {
             let transform = c.transform
-                .trans(cat.x, cat.y);
+                .trans(cat.position().x, cat.position().y);
             rectangle(App::RED, square, transform, gl);
             //polygon(RED, &TRIANGLE, transform, gl);
         }
@@ -113,7 +113,7 @@ impl App {
     fn draw_rat(c: &Context, gl: &mut GlGraphics, rats: &Vec<Rat>, square: graphics::types::Rectangle) {
         for rat in rats {
             let transform = c.transform
-                .trans(rat.x, rat.y);
+                .trans(rat.position().x, rat.position().y);
             rectangle(App::BLUE, square, transform, gl);
             //polygon(BLUE, &TRIANGLE, transform, gl);
         }
