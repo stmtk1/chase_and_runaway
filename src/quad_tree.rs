@@ -81,3 +81,38 @@ pub fn new<T: Animal>(animals : &Vec<T>) -> QuadTree<T> {
     }
     ret
 }
+
+pub fn search<T: Animal>(tree: &QuadTree<T>, animal: T, radious: f64){
+    
+}
+
+fn dist_square<T: Animal>(x: f64, y: f64, width: f64, height: f64, animal: &T) -> f64 {
+    let PVector{x: animal_x, y: animal_y} = animal.position();
+    if x < animal_x && animal_x < x + width && y < animal_y  && animal_y < y + height {
+        return 0.0;
+    }
+    let mut ret = max(WIDTH, HEIGHT) + 1.0;
+    ret = min(ret, PVector::new(x, y).mult(-1.0).add(animal.position()).len());
+    ret = min(ret, PVector::new(x + width, y).mult(-1.0).add(animal.position()).len());
+    ret = min(ret, PVector::new(x, y + height).mult(-1.0).add(animal.position()).len());
+    ret = min(ret, PVector::new(x + width, y + height).mult(-1.0).add(animal.position()).len());
+    
+    if x < animal_x && animal_x < x + width {
+        ret = min(ret, PVector::new(0.0, y).mult(-1.0).add(animal.position()).len());
+        ret = min(ret, PVector::new(0.0, y + height).mult(-1.0).add(animal.position()).len());
+    }
+    
+    if y < animal_y && animal_y < y + height {
+        ret = min(ret, PVector::new(x, 0.0).mult(-1.0).add(animal.position()).len());
+        ret = min(ret, PVector::new(x + width, 0.0).mult(-1.0).add(animal.position()).len());
+    }
+    ret
+}
+
+fn max(a: f64, b: f64) -> f64 {
+    if a < b { b } else { a }
+}
+
+fn min(a: f64, b: f64) -> f64 {
+    if a < b { a } else { b }
+}

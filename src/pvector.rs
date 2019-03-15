@@ -80,6 +80,10 @@ impl PVector {
             y: 0.0
         }
     }
+    
+    pub fn sub(&self, other: &PVector) -> PVector {
+        other.mult(-1.0).add(self.clone())
+    }
 }
 
 impl std::cmp::PartialEq for PVector {
