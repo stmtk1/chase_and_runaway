@@ -241,26 +241,6 @@ impl Cat{
         }
     }
     
-    fn comp_by_x(a1: &Cat, a2: &Cat) -> std::cmp::Ordering {
-        if a1.position().x < a2.position().x {
-            std::cmp::Ordering::Less
-        } else if a1.position().x > a2.position().x {
-            std::cmp::Ordering::Greater
-        }else{
-            std::cmp::Ordering::Equal
-        }
-    }
-    
-    fn comp_by_y(a1: &Cat, a2: &Cat) -> std::cmp::Ordering {
-        if a1.position().y < a2.position().y {
-            std::cmp::Ordering::Less
-        } else if a1.position().y > a2.position().y {
-            std::cmp::Ordering::Greater
-        }else{
-            std::cmp::Ordering::Equal
-        }
-    }
-    
     pub fn next_generation(cats: &Vec<Cat>) -> Vec<Cat>{
         let mut ret: Vec<Cat> = Vec::new();
         let superior = Cat::collect_servive(cats);

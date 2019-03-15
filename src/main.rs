@@ -8,6 +8,7 @@ mod animal;
 mod pvector;
 mod app;
 mod consts;
+mod quad_tree;
 //mod kd_tree;
 
 use app::App;

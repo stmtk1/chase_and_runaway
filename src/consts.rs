@@ -15,3 +15,4 @@ pub const COHENSION_MAX: f64 = 480.0;
 pub const CHASE_MAX: f64 = 480.0;
 pub const SEPARATE_MAX: f64 = 480.0;
 pub const ALIGN_MAX: f64 = 480.0;
+pub const CELL_WIDTH: f64 = 64.0;

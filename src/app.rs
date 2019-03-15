@@ -10,6 +10,7 @@ use graphics::Transformed;
 use graphics::context::Context;
 use piston::event_loop::*;
 use piston::input::*;
+use quad_tree::{self, QuadTree};
 
 // #[derive(Clone)]
 pub struct App {
@@ -27,6 +28,7 @@ impl App {
     pub fn new() -> App {
         let opengl = OpenGL::V3_2;
         let window = App::new_window(opengl);
+        let tree = quad_tree::new(&App::new_cats());
         App {
             gl: GlGraphics::new(opengl),
             window: window,
@@ -157,14 +159,6 @@ impl App {
         self.cats = <Cat as Animal>::next_states(&cats, &rats);
         self.rats = <Rat as Animal>::next_states(&cats, &rats);
         App::is_finished(&self.rats)
-    }
-    
-    fn max(a: f64, b: f64) -> f64 {
-        if a < b {
-            a
-        }else{
-            b
-        }
     }
     
     pub fn print_params(&self, ord: i32) {
