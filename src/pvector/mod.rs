@@ -1,3 +1,5 @@
+mod test;
+
 const WIDTH: f64 = 640.0;
 const HEIGHT: f64 = 480.0;
 
@@ -14,6 +16,7 @@ impl PVector {
             y: y,
         }
     }
+    
     pub fn len(&self) -> f64 {
         (self.x * self.x + self.y * self.y).sqrt()
     }
@@ -45,7 +48,7 @@ impl PVector {
         }
     }
     
-    pub fn offset(&self, other: PVector) -> PVector {
+    pub fn offset(&self, other: &PVector) -> PVector {
         PVector {
             x: PVector::offset_x(self.x, other.x), 
             y: PVector::offset_y(self.y, other.y) 
@@ -79,10 +82,6 @@ impl PVector {
             x: 0.0,
             y: 0.0
         }
-    }
-    
-    pub fn sub(&self, other: &PVector) -> PVector {
-        other.mult(-1.0).add(self.clone())
     }
 }
 

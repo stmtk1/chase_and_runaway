@@ -76,7 +76,7 @@ impl Animal for Rat {
     fn offset<T: Animal>(&self, other: &T) -> PVector {
         let self_vec = self.position();
         let other_vec = other.position();
-        self_vec.offset(other_vec)
+        self_vec.offset(&other_vec)
     }
     
     fn collect_near_pvectors<T: Animal>(&self, animals: &Vec<T>, radious: f64) -> Vec<T> {
