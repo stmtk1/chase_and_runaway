@@ -10,6 +10,7 @@ pub struct PVector {
 }
 
 impl PVector {
+    // インスタンス生成
     pub fn new(x: f64, y:f64) -> PVector{
         PVector{
             x: x,
@@ -17,6 +18,7 @@ impl PVector {
         }
     }
     
+    // ベクトルの長さ
     pub fn len(&self) -> f64 {
         (self.x * self.x + self.y * self.y).sqrt()
     }
@@ -48,6 +50,7 @@ impl PVector {
         }
     }
     
+    // 点と点の距離を計算
     pub fn offset(&self, other: &PVector) -> PVector {
         PVector {
             x: PVector::offset_x(self.x, other.x), 
@@ -55,6 +58,7 @@ impl PVector {
         }
     }
     
+    // ベクトル同士の足し算
     pub fn add(&self, other: PVector) -> PVector {
         PVector{
             x: self.x + other.x,
@@ -62,6 +66,7 @@ impl PVector {
         }
     }
     
+    // ベクトルの正規化
     pub fn normalize(&self) -> PVector {
         let size = self.len();
         PVector{
@@ -70,6 +75,7 @@ impl PVector {
         }
     }
     
+    // ベクトルとスカラの掛け算
     pub fn mult(&self, scalar: f64) -> PVector {
         PVector {
             x: self.x * scalar,
@@ -77,6 +83,7 @@ impl PVector {
         }
     }
     
+    // 零ベクトル
     pub fn zero() -> PVector {
         PVector {
             x: 0.0,
@@ -86,6 +93,7 @@ impl PVector {
 }
 
 impl std::cmp::PartialEq for PVector {
+    // 二つのベクトルが等しいか
     fn eq(&self, other: &PVector) -> bool {
         self.x == other.x && self.y == other.y
     }

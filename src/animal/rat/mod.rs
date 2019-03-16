@@ -7,6 +7,7 @@ use rand::prelude::*;
 
 
 impl Animal for Rat {
+    // インスタンス初期化
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
@@ -21,6 +22,7 @@ impl Animal for Rat {
         }
     }
 
+    // 次のフレームの計算
     fn next_states(cats: &Vec<Cat>, rats: &Vec<Rat>) -> Vec<Self> {
         let alive_rats = Rat::delete_eaten(cats, rats);
         let ret = alive_rats
@@ -30,10 +32,12 @@ impl Animal for Rat {
         <Rat as Animal>::life_manage(&ret)
     }
     
+    // 現在位置に速度ベクトルを足す
     fn move_self(&self) -> Rat {
         let mut ret = self.clone();
         let mut new_pos = ret.position.add(self.clone().velocity);
         
+        // 画面からはみ出た時の操作
         if new_pos.x > WIDTH {
             new_pos.x -= WIDTH;
         }
@@ -55,30 +59,36 @@ impl Animal for Rat {
         ret
     }
     
+    // 速度ベクトルを返す
     fn as_velocity(&self) -> PVector {
         self.velocity.clone()
     }
     
+    // 速度ベクトルの変更
     fn apply_velocity(&self, pvector: &PVector) -> Self {
         let mut ret = self.clone();
         ret.velocity = pvector.clone();
         ret
     }
     
+    // 一定半径にいるかどうか
     fn is_within<T: Animal>(&self, other: &T, radious: f64) -> bool {
         self.offset(other).len() < radious
     }
     
+    // 現在位置を返す
     fn position(&self) -> PVector{
         self.position.clone()
     }
     
+    // 相対位置の計算
     fn offset<T: Animal>(&self, other: &T) -> PVector {
         let self_vec = self.position();
         let other_vec = other.position();
         self_vec.offset(&other_vec)
     }
     
+    // 近くにいる個体を集める
     fn collect_near_pvectors<T: Animal>(&self, animals: &Vec<T>, radious: f64) -> Vec<T> {
         animals
             .into_iter()
@@ -88,6 +98,7 @@ impl Animal for Rat {
             .collect()
     }
     
+    // 相対位置の平均を計算
     fn calculate_direction<T: Animal>(&self, animals: Vec<T>) -> PVector {
         animals
             .into_iter()
@@ -96,16 +107,19 @@ impl Animal for Rat {
             .normalize()
     }
     
+    // 子孫
     fn descendant(&self) -> Self{
         let mut ret = Rat::new();
         ret.energy = ENERGY_MAX;
         ret
     }
     
+    //個体識別のためのID
     fn id(&self) -> u64 {
         self.id
     }
     
+    // 死んだ個体の削除、および確率的に子孫を作成
     fn life_manage(animals: &Vec<Self>) -> Vec<Self> {
         let mut rng = rand::thread_rng();
         let mut ret: Vec<Self> = Vec::new();
@@ -121,12 +135,14 @@ impl Animal for Rat {
         ret
     }
     
+    // 二つの個体が同じか識別
     fn is_same<T: Animal>(&self, other: &T) -> bool{
         self.id() == other.id()
     }
 }
 
 impl Rat {
+    // 1個体の次の状態
     fn run_away(&self, cats: &Vec<Cat>) -> Rat {
         let next_velocity = self
             .as_velocity()
@@ -138,6 +154,7 @@ impl Rat {
             .move_self()
     }
     
+    // 逃げる方向をか速度ベクトルにする
     fn run_away_vector(&self, cats: &Vec<Cat>) -> PVector {
         let near_cats = self.collect_near_pvectors(cats, RUNAWAY_RADIOUS);
         
@@ -150,12 +167,14 @@ impl Rat {
             .mult(-1.0)
     }
     
+    // 食べられているかどうかを判定
     fn eaten(&self, cats: &Vec<Cat>) -> bool{
         cats
             .into_iter()
             .any(|cat| self.is_within(cat, 1.0))
     }
     
+    // 食べられたらいなくなる
     fn delete_eaten(cats: &Vec<Cat>, rats: &Vec<Rat>) -> Vec<Rat> {
         rats
             .into_iter()

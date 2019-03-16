@@ -6,6 +6,7 @@ use animal::{Animal, Cat, Rat};
 use rand::prelude::*;
 
 impl Animal for Cat {
+    // 初期化
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         let theta: f64 = rng.gen::<f64>() * 2.0 * (std::f64::consts::PI);
@@ -25,6 +26,7 @@ impl Animal for Cat {
         }
     }
     
+    // １フレーム後の状態を返す
     fn next_states(cats: &Vec<Cat>, rats: &Vec<Rat>) -> Vec<Self> {
         let ret: Vec<Cat> = cats
             .into_iter()
@@ -33,6 +35,7 @@ impl Animal for Cat {
         <Cat as Animal>::life_manage(&ret)
     }
     
+    // 速度ベクトル分だけ動く
     fn move_self(&self) -> Cat {
         let mut new_pos = self.position().add(self.as_velocity());
         let mut ret = self.clone();
@@ -59,30 +62,35 @@ impl Animal for Cat {
         ret
     }
     
+    // 速度ベクトルを返す
     fn as_velocity(&self) -> PVector {
         self.velocity.clone()
     }
     
+    //速度ベクトルの変更
     fn apply_velocity(&self, pvector: &PVector) -> Self {
         let mut ret = self.clone();
         ret.velocity = pvector.clone();
         ret
     }
     
+    // 一定半径以内にいるかどうか
     fn is_within<T: Animal>(&self, other: &T, radious: f64) -> bool {
         self.offset(other).len() < radious
     }
-    
+    // 相対位置の計算
     fn offset<T: Animal>(&self, other: &T) -> PVector {
         let self_vec = self.position();
         let other_vec = other.position();
         self_vec.offset(&other_vec)
     }
     
+    // 現在の位置
     fn position(&self) -> PVector{
         self.position.clone()
     }
     
+    // 一定半径以内にいる個体を集める
     fn collect_near_pvectors<T: Animal>(&self, animals: &Vec<T>, radious: f64) -> Vec<T> {
         animals
             .into_iter()
@@ -92,6 +100,7 @@ impl Animal for Cat {
             .collect()
     }
     
+    // 相対位置の平均を計算
     fn calculate_direction<T: Animal>(&self, animals: Vec<T>) -> PVector {
         animals
             .into_iter()
@@ -100,6 +109,7 @@ impl Animal for Cat {
             .normalize()
     }
     
+    // 子孫
     fn descendant(&self) -> Self{
         let mut ret = Cat::new();
         ret.chase_weight = Cat::mutate(self.chase_weight, CHASE_MAX);
@@ -110,6 +120,7 @@ impl Animal for Cat {
         ret
     }
     
+    // 死んだ個体の削除、および確率的に子孫を作成
     fn life_manage(animals: &Vec<Self>) -> Vec<Self> {
         let mut rng = rand::thread_rng();
         let mut ret: Vec<Self> = Vec::new();
@@ -125,16 +136,19 @@ impl Animal for Cat {
         ret
     }
     
+     // 二つの個体が同じかどうかを判定
     fn is_same<T: Animal>(&self, other: &T) -> bool{
         self.id() == other.id()
     }
     
+    // 個体の識別用
     fn id(&self) -> u64 {
         self.id
     }
 }
 
 impl Cat{
+    // 加速度ベクトルを計算し、速度ベクトルに足す
     pub fn chase(&self, cats: &Vec<Cat>, rats: &Vec<Rat>) -> Cat{
         let next_velocity = self
             .as_velocity()
@@ -151,6 +165,7 @@ impl Cat{
             .move_self()
     }
     
+    // 追いかける方向の計算
     fn chase_vector(&self, rats: &Vec<Rat>) -> PVector {
         let near_rats = self.collect_near_pvectors(rats, CHASE_RADIOUS);
         
@@ -163,6 +178,7 @@ impl Cat{
             .mult(self.chase_weight)
     }
     
+    // BOIDの個体同士を引き離す操作
     fn separate_same(&self, cats: &Vec<Cat>) -> PVector {
         let near_animal = self.collect_near_pvectors(cats, SEPARATE_RADIOUS);
         
@@ -174,6 +190,7 @@ impl Cat{
             .mult(-1.0 * self.separate_weight)
     }
     
+    // BOIDの整列処理
     fn align(&self, cats: &Vec<Cat>) -> PVector{
         let near_cats = self.collect_near_pvectors(cats, ALIGN_RADIOUS);
         
@@ -185,6 +202,7 @@ impl Cat{
             .mult(self.align_weight)
     }
     
+    // BOIDの個体が多い場所に行く操作
     fn cohension(&self, same_kind: &Vec<Cat>) -> PVector {
         let near_animals = self.collect_near_pvectors(same_kind, COHENSION_RADIOUS);
         
@@ -196,6 +214,7 @@ impl Cat{
             .mult(self.cohension_weight)
     }
     
+    // 一定半径以内にいるなら食べる
     fn eat(&self, rats: &Vec<Rat>) -> Cat {
         let mut ret = self.clone();
         let can_eat = rats
@@ -208,6 +227,7 @@ impl Cat{
         ret
     }
     
+    // 整列処理のために近くにいる個体の速度ベクトルの平均をとる
     fn add_velocity(&self, animals: &Vec<Cat>) -> PVector {
         animals
             .into_iter()
@@ -216,11 +236,13 @@ impl Cat{
             .normalize()
     }
     
+    // 子孫を残す時にパラメータを少し変化させる
     fn mutate(value: f64, value_max: f64) -> f64{
         let mut rng = rand::thread_rng();
         (rng.gen::<f64>() * MUTATE_ABS * 2.0 - MUTATE_ABS + value).min(value_max).max(0.0)
     }
     
+    // 遺伝的アルゴリズムでたくさん食べた個体だけが次の世代で生き残る
     fn collect_servive(cats: &Vec<Cat>) -> Vec<Cat> {
         let len = cats.len();
         let mut ret = cats.clone();
@@ -231,6 +253,7 @@ impl Cat{
             .collect()
     }
     
+    // 次の世代に行く時に食べた順にソートする
     fn comp_by_ate(a1: &Cat, a2: &Cat) -> std::cmp::Ordering {
         if a1.ate < a2.ate {
             std::cmp::Ordering::Less
@@ -241,6 +264,7 @@ impl Cat{
         }
     }
     
+    // 生き残った個体を複製し、次の世代にする
     pub fn next_generation(cats: &Vec<Cat>) -> Vec<Cat>{
         let mut ret: Vec<Cat> = Vec::new();
         let superior = Cat::collect_servive(cats);
@@ -260,4 +284,3 @@ impl Cat{
             .collect()
     }
 }
-
