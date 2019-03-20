@@ -25,6 +25,7 @@ impl App {
     const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
     const BLUE:   [f32; 4] = [0.0, 0.0, 1.0, 1.0];
     const ANIMAL_SIZE: f64 = 5.0;
+    // 初期化
     pub fn new() -> App {
         let opengl = OpenGL::V3_2;
         let window = App::new_window(opengl);
@@ -37,6 +38,7 @@ impl App {
         }
     }
     
+    // １世代目に捕食者の初期化
     fn new_cats() -> Vec<Cat> {
         let mut ret: Vec<Cat> = Vec::new();
         for _ in 0..10 {
@@ -45,6 +47,7 @@ impl App {
         ret
     }
     
+    // 世代の初めに捕食者の初期化
     fn new_rats() -> Vec<Rat> {
         let mut ret: Vec<Rat> = Vec::new();
         for _ in 0..200 {
@@ -52,6 +55,8 @@ impl App {
         }
         ret
     }
+    
+    // ウィンドウの初期化
     fn new_window(opengl: OpenGL) -> Window{
         WindowSettings::new(
                 "spinning-square",
@@ -63,11 +68,13 @@ impl App {
             .unwrap()
     }
     
+    // 優秀な捕食者だけを次の世代へ
     pub fn next_generation(&mut self){
         self.cats = Cat::next_generation(&self.cats);
         self.rats = App::new_rats();
     }
     
+    // １世代終わるまでウインドウを表示
     pub fn show_window(&mut self){
         let mut events = Events::new(EventSettings::new());
         
@@ -84,6 +91,7 @@ impl App {
         }
     }
     
+    // 描画
     pub fn render(&mut self, args: &RenderArgs){
         
         let square: graphics::types::Rectangle = square(0.0, 0.0, App::ANIMAL_SIZE);
@@ -102,7 +110,7 @@ impl App {
         });
     }
     
-
+    // 捕食者の描画
     fn draw_cat(c: &Context, gl: &mut GlGraphics, cats: &Vec<Cat>, square: graphics::types::Rectangle) {
         for cat in cats {
             let transform = c.transform
@@ -112,6 +120,7 @@ impl App {
         }
     }
     
+    // 日捕食者の描画
     fn draw_rat(c: &Context, gl: &mut GlGraphics, rats: &Vec<Rat>, square: graphics::types::Rectangle) {
         for rat in rats {
             let transform = c.transform
@@ -120,11 +129,13 @@ impl App {
             //polygon(BLUE, &TRIANGLE, transform, gl);
         }
     }
-
+    
+    // 非捕食者がいなくなったら世代が終わる
     fn is_finished(rats: &Vec<Rat>) -> bool {
         rats.len() == 0
     }
     
+    // 捕食者のパラメータの平均の計算
     fn chase_average(animals: &Vec<Cat>) -> f64 {
         animals
             .into_iter()
@@ -132,6 +143,7 @@ impl App {
             / animals.len() as f64
     }
     
+    // 捕食者のパラメータの平均の計算
     fn align_average(animals: &Vec<Cat>) -> f64 {
         animals
             .into_iter()
@@ -139,6 +151,7 @@ impl App {
             / animals.len() as f64
     }
     
+    // 捕食者のパラメータの平均の計算
     fn separate_average(animals: &Vec<Cat>) -> f64 {
         animals
             .into_iter()
@@ -146,6 +159,7 @@ impl App {
             / animals.len() as f64
     }
     
+    // 捕食者のパラメータの平均の計算
     fn cohension_average(animals: &Vec<Cat>) -> f64 {
         animals
             .into_iter()
@@ -153,6 +167,7 @@ impl App {
             / animals.len() as f64
     }
 
+    // １フレーム進める
     pub fn update(&mut self)  -> bool {
         let cats = self.cats.clone();
         let rats = self.rats.clone();
@@ -161,6 +176,7 @@ impl App {
         App::is_finished(&self.rats)
     }
     
+    // 世代の最後にパラメータを標準出力へ
     pub fn print_params(&self, ord: i32) {
         print!("{},", ord);
         print!("{},", App::chase_average(&self.cats));

@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests{
     use pvector::PVector;
+    use consts::*;
     fn is_near(a: f64, b: f64) -> bool {
         ((a - b) / b).abs() < 1.0e-9
     }
@@ -24,17 +25,36 @@ mod tests{
         assert!(is_near(PVector::new(1.0, 3.0_f64.sqrt()).len(), 2.0));
     }
     
-    /*
      // TODO 画面を飛び越えて距離判定する
     #[test]
     fn offset_test(){
+        // 画面を超えて判定しなくてもいい場合
         let vec1 = PVector::new(1.0, 2.0);
         let vec2 = PVector::new(10.0, 20.0);
         assert_eq!(vec1.offset(&vec2), PVector::new(9.0, 18.0));
         assert_eq!(vec2.offset(&vec1), PVector::new(-9.0, -18.0));
-        // 
+        
+        let over_width1 = PVector::new(WIDTH - 1.0, 10.0);
+        let over_width2 = PVector::new(2.0, 10.0);
+        // 1画面で見たら相対的に左だが、画面を飛び越えると相対的に右の場合
+        assert_eq!(over_width1.offset(&over_width2), PVector::new(3.0, 0.0));
+        // 1画面で見たら相対的に右だが、画面を飛び越えると相対的に左の場合
+        assert_eq!(over_width2.offset(&over_width1), PVector::new(-3.0, 0.0));
+        
+        let over_height1 = PVector::new(10.0 , HEIGHT - 1.0);
+        let over_height2 = PVector::new(10.0 , 2.0);
+         //1画面で見たら相対的に下だが、画面を飛び越えると相対的に上の場合
+        assert_eq!(over_height1.offset(&over_height2), PVector::new(0.0, 3.0));
+         //1画面で見たら相対的に上だが、画面を飛び越えると相対的に下の場合
+        assert_eq!(over_height2.offset(&over_height1), PVector::new(0.0, -3.0));
+        
+        let over_both1 = PVector::new(WIDTH - 1.0, HEIGHT - 2.0);
+        let over_both2 = PVector::new(3.0, 4.0);
+        // 1画面で見たら右下だが、画面を飛び越えると左上の場合
+        assert_eq!(over_both1.offset(&over_both2), PVector::new(4.0, 6.0));
+        // 1画面で見たら右下だが、画面を飛び越えると左上の場合
+        assert_eq!(over_both2.offset(&over_both1), PVector::new(-4.0, -6.0));
     }
-    */
     
     #[test]
     fn add_test(){
