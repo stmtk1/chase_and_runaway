@@ -4,12 +4,18 @@ mod tests{
     use consts::*;
     use pvector::PVector;
     
-    fn setpos(animal: &mut Cat, pos: &PVector){
-        animal.position = pos.clone();
+    macro_rules! assert_float{
+        (
+            $x: expr ,$y: expr
+        ) => {
+            {
+                assert!((($x - $y) / $x).abs() < 1.0e-9);
+            }
+        }
     }
     
-    fn is_near(a: f64, b: f64) -> bool {
-        ((a - b) / b).abs() < 1.0e-9
+    fn setpos(animal: &mut Cat, pos: &PVector){
+        animal.position = pos.clone();
     }
     
     #[test]
@@ -19,8 +25,8 @@ mod tests{
             let vel_size = cat.velocity.len();
             assert!(0.0 < cat.position().x && cat.position().x < WIDTH);
             assert!(0.0 < cat.position().y && cat.position().y < HEIGHT);
-            assert!(is_near(cat.velocity.len(), CAT_VELOCITY));
-            assert!(is_near(vel_size, CAT_VELOCITY));
+            assert_float!(cat.velocity.len(), CAT_VELOCITY);
+            assert_float!(vel_size, CAT_VELOCITY);
             assert!(0.0 < cat.chase_weight && cat.chase_weight <  CHASE_MAX);
             assert!(0.0 < cat.separate_weight && cat.separate_weight <  SEPARATE_MAX);
             assert!(0.0 < cat.align_weight && cat.align_weight <  ALIGN_MAX);
@@ -102,8 +108,8 @@ mod tests{
         let diff = PVector::new(1.0, 2.0);
         setpos(&mut cat2, &cat1.position().add(diff));
         let offset = cat1.offset(&cat2);
-        assert!(is_near(offset.x, offset.x));
-        assert!(is_near(offset.y, offset.y));
+        assert_float!(offset.x, offset.x);
+        assert_float!(offset.y, offset.y);
     }
     
     #[test]
@@ -172,8 +178,8 @@ mod tests{
             arg.push(other.clone());
         }
         let result = cat.calculate_direction(arg);
-        assert!(is_near(dx, result.x));
-        assert!(is_near(dy, result.y));
+        assert_float!(dx, result.x);
+        assert_float!(dy, result.y);
     }
     
     
@@ -209,8 +215,8 @@ mod tests{
         }
         
         let ret = cat.add_velocity(&cats);
-        assert!(is_near(x, ret.x));
-        assert!(is_near(y, ret.y));
+        assert_float!(x, ret.x);
+        assert_float!(y, ret.y);
     }
     
     #[test]
@@ -252,8 +258,8 @@ mod tests{
         }
         let result = cat.chase_vector(&chased);
         
-        assert!(is_near(dx * cat.chase_weight, result.x));
-        assert!(is_near(dy * cat.chase_weight, result.y));
+        assert_float!(dx * cat.chase_weight, result.x);
+        assert_float!(dy * cat.chase_weight, result.y);
         
         let not_chase_diff = CHASE_RADIOUS;
         offset = PVector::new(-0.6 * not_chase_diff, -0.8 * not_chase_diff);
@@ -278,8 +284,8 @@ mod tests{
         }
         let result = cat.separate_same(&others);
         
-        assert!(is_near(x * cat.separate_weight, result.x));
-        assert!(is_near(y * cat.separate_weight, result.y));
+        assert_float!(x * cat.separate_weight, result.x);
+        assert_float!(y * cat.separate_weight, result.y);
         
         let not_separate_diff = SEPARATE_RADIOUS;
         setpos(&mut cat, &PVector::new(not_separate_diff, not_separate_diff).add(other.position()));
@@ -303,8 +309,8 @@ mod tests{
         }
         let result = cat.align(&others);
         
-        assert!(is_near(x * cat.align_weight, result.x));
-        assert!(is_near(y * cat.align_weight, result.y));
+        assert_float!(x * cat.align_weight, result.x);
+        assert_float!(y * cat.align_weight, result.y);
         
         let not_align_diff = ALIGN_RADIOUS;
         setpos(&mut cat, &PVector::new(-not_align_diff, -not_align_diff).add(other.position()));
@@ -328,8 +334,8 @@ mod tests{
         }
         let result = cat.cohension(&others);
         
-        assert!(is_near(x * cat.cohension_weight, result.x));
-        assert!(is_near(y * cat.cohension_weight, result.y));
+        assert_float!(x * cat.cohension_weight, result.x);
+        assert_float!(y * cat.cohension_weight, result.y);
         
         let not_cohension_diff = COHENSION_RADIOUS;
         setpos(&mut cat, &PVector::new(-not_cohension_diff, -not_cohension_diff).add(other.position()));

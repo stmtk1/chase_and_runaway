@@ -2,8 +2,15 @@
 mod tests{
     use pvector::PVector;
     use consts::*;
-    fn is_near(a: f64, b: f64) -> bool {
-        ((a - b) / b).abs() < 1.0e-9
+    
+    macro_rules! assert_float{
+        (
+            $x: expr ,$y: expr
+        ) => {
+            {
+                assert!((($x - $y) / $x).abs() < 1.0e-9);
+            }
+        }
     }
     
     #[test]
@@ -18,11 +25,11 @@ mod tests{
     #[test]
     fn len_test(){
         // 有名な直角間角形
-        assert!(is_near(PVector::new(3.0, 4.0).len(), 5.0));
+        assert_float!(PVector::new(3.0, 4.0).len(), 5.0);
         // 直角二等辺三角形
-        assert!(is_near(PVector::new(1.0, 1.0).len(), 2.0_f64.sqrt()));
+        assert_float!(PVector::new(1.0, 1.0).len(), 2.0_f64.sqrt());
         // 正三角形の半分
-        assert!(is_near(PVector::new(1.0, 3.0_f64.sqrt()).len(), 2.0));
+        assert_float!(PVector::new(1.0, 3.0_f64.sqrt()).len(), 2.0);
     }
     
      // TODO 画面を飛び越えて距離判定する
@@ -74,14 +81,14 @@ mod tests{
     fn normalize_test(){
         // 有名な直角三角形
         let v = PVector::new(3.0, 4.0).normalize();
-        assert!(is_near(0.6, v.x));
-        assert!(is_near(0.8, v.y));
+        assert_float!(0.6, v.x);
+        assert_float!(0.8, v.y);
         let v = PVector::new(1.0, 1.0).normalize();
-        assert!(is_near(0.5_f64.sqrt(), v.x));
-        assert!(is_near(0.5_f64.sqrt(), v.y));
+        assert_float!(0.5_f64.sqrt(), v.x);
+        assert_float!(0.5_f64.sqrt(), v.y);
         let v = PVector::new(1.0, 3.0_f64.sqrt()).normalize();
-        assert!(is_near(0.5_f64, v.x));
-        assert!(is_near(0.75_f64.sqrt(), v.y));
+        assert_float!(0.5_f64, v.x);
+        assert_float!(0.75_f64.sqrt(), v.y);
     }
     
     #[test]

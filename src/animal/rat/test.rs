@@ -8,8 +8,14 @@ mod tests{
         animal.position = pos.clone();
     }
     
-    fn is_near(a: f64, b: f64) -> bool {
-        ((a - b) / b).abs() < 1.0e-9
+    macro_rules! assert_float{
+        (
+            $x: expr ,$y: expr
+        ) => {
+            {
+                assert!((($x - $y) / $x).abs() < 1.0e-9);
+            }
+        }
     }
     
     #[test]
@@ -19,8 +25,8 @@ mod tests{
             let vel_size = rat.velocity.len();
             assert!(0.0 < rat.position.x && rat.position.x < WIDTH);
             assert!(0.0 < rat.position.y && rat.position.y < HEIGHT);
-            assert!(is_near(rat.velocity.len(), RAT_VELOCITY));
-            assert!(is_near(vel_size, RAT_VELOCITY));
+            assert_float!(rat.velocity.len(), RAT_VELOCITY);
+            assert_float!(vel_size, RAT_VELOCITY);
             assert_eq!(rat.energy, ENERGY_MAX);
         }
     }
@@ -133,7 +139,7 @@ mod tests{
         let parent = <Rat as Animal>::new();
         for _ in 0..100 {
             let child = parent.descendant();
-            assert!(is_near(parent.velocity.len(), child.velocity.len()));
+            assert_float!(parent.velocity.len(), child.velocity.len());
             // TODO vxとvyのテスト
             assert_ne!(parent.position.x, child.position.x);
             assert_ne!(parent.position.y, child.position.y);
@@ -174,8 +180,8 @@ mod tests{
             arg.push(other.clone());
         }
         let result = rat.calculate_direction(arg);
-        assert!(is_near(dx, result.x));
-        assert!(is_near(dy, result.y));
+        assert_float!(dx, result.x);
+        assert_float!(dy, result.y);
     }
     
     
@@ -213,8 +219,8 @@ mod tests{
         }
         let result = rat.run_away_vector(&cats);
         
-        assert!(is_near(x, result.x));
-        assert!(is_near(y, result.y));
+        assert_float!(x, result.x);
+        assert_float!(y, result.y);
         
         let not_chase_diff = CHASE_RADIOUS;
         setpos(&mut rat, &PVector::new(not_chase_diff, not_chase_diff).add(cat.position()));
