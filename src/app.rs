@@ -10,7 +10,7 @@ use graphics::Transformed;
 use graphics::context::Context;
 use piston::event_loop::*;
 use piston::input::*;
-use quad_tree::{self, QuadTree};
+//use quad_tree::{self, QuadTree};
 
 // #[derive(Clone)]
 pub struct App {
@@ -29,7 +29,7 @@ impl App {
     pub fn new() -> App {
         let opengl = OpenGL::V3_2;
         let window = App::new_window(opengl);
-        let tree = quad_tree::new(&App::new_cats());
+        //let tree = quad_tree::new(&App::new_cats());
         App {
             gl: GlGraphics::new(opengl),
             window: window,
