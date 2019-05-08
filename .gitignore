@@ -1,3 +1,5 @@
 /target
 **/*.rs.bk
 **/*.csv
+.idea/**
+chase_and_runaway.iml
