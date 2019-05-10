@@ -4,7 +4,7 @@ mod rat;
 
 use pvector::PVector;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Cat{
     position: PVector,
     velocity: PVector,

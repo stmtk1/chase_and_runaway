@@ -3,4 +3,4 @@
 **/*.csv
 .idea/**
 chase_and_runaway.iml
-**/Cargo.lock
+Cargo.lock
