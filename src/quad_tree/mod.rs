@@ -94,14 +94,47 @@ impl<T: Animal> QuadTree<T> {
         if let Some(ref children) = self.children {
             let mut ret = LinkedList::new();
             for child in children {
-                let mut tree = child.borrow_mut();
+                let tree = child.borrow();
                 if tree.rectangle.min_dist(animal) < radious {
-                    ret.append(&mut tree.search(animal, radious));
+                    let mut animals = tree.search(animal, radious);
+                    ret.append(&mut animals);
                 }
             }
             ret
         } else {
             panic!("both none");
+        }
+    }
+    
+    fn remove(&mut self, target: &T){
+        if let Some(animals) = self.animals.clone() {
+            let new_animals: LinkedList<T> = animals
+                .into_iter()
+                .filter(|animal| target.id() != animal.id())
+                .map(|animal| animal.clone())
+                .collect();
+            self.animals = Some(new_animals);
+        } else if let Some(ref mut children) = self.children {
+            for child in children {
+                let mut tree = child.borrow_mut();
+                if tree.rectangle.is_inside(target) {
+                    tree.remove(target);
+                }
+            }
+        }
+    }
+    
+    fn insert(&mut self, target: &T){
+        if let Some(mut animals) = self.animals.clone() {
+            animals.push_back(target.clone());
+            self.animals = Some(animals);
+        } else if let Some(ref mut children) = self.children {
+            for child in children {
+                let mut tree = child.borrow_mut();
+                if tree.rectangle.is_inside(target) {
+                    tree.insert(target);
+                }
+            }
         }
     }
 }
