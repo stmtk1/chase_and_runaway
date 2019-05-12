@@ -18,6 +18,8 @@ pub struct App {
     pub window: Window,
     pub cats: Vec<Cat>,
     pub rats: Vec<Rat>,
+    pub cats_tree: QuadTree<Cat>,
+    pub rats_tree: QuadTree<Rat>,
 }
 
 impl App {
@@ -30,13 +32,14 @@ impl App {
         let opengl = OpenGL::V3_2;
         let window = App::new_window(opengl);
         let tree = QuadTree::new(&App::new_rats());
-        println!("{:?}", tree.search(&<Cat as Animal>::new(), 100.0).len());
-        println!("{:?}", Rectangle::whole_screen().min_square());
+        let cats = App::new_cats();
+        let rats = App::new_rats();
+        let cats_tree = QuadTree::new(&cats);
+        let rats_tree = QuadTree::new(&rats);
+        
         App {
             gl: GlGraphics::new(opengl),
-            window,
-            cats: App::new_cats(),
-            rats: App::new_rats(),
+            window, cats, rats, cats_tree, rats_tree,
         }
     }
     
@@ -175,6 +178,8 @@ impl App {
         let rats = self.rats.clone();
         self.cats = <Cat as Animal>::next_states(&cats, &rats);
         self.rats = <Rat as Animal>::next_states(&cats, &rats);
+        self.cats_tree = QuadTree::new(&self.cats);
+        self.rats_tree = QuadTree::new(&self.rats);
         App::is_finished(&self.rats)
     }
     

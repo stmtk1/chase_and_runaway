@@ -106,24 +106,6 @@ impl<T: Animal> QuadTree<T> {
         }
     }
     
-    fn remove(&mut self, target: &T){
-        if let Some(animals) = self.animals.clone() {
-            let new_animals: LinkedList<T> = animals
-                .into_iter()
-                .filter(|animal| target.id() != animal.id())
-                .map(|animal| animal.clone())
-                .collect();
-            self.animals = Some(new_animals);
-        } else if let Some(ref mut children) = self.children {
-            for child in children {
-                let mut tree = child.borrow_mut();
-                if tree.rectangle.is_inside(target) {
-                    tree.remove(target);
-                }
-            }
-        }
-    }
-    
     fn insert(&mut self, target: &T){
         if let Some(mut animals) = self.animals.clone() {
             animals.push_back(target.clone());
@@ -229,4 +211,5 @@ impl Rectangle {
             height: HEIGHT,
         }
     }
+    
 }

@@ -2,7 +2,7 @@
 mod rectangle_tests{
     use quad_tree::{Rectangle, QuadTree, WIDTH_MIN};
     use consts::*;
-    use animal::{Animal, Cat};
+    use animal::Cat;
     
     macro_rules! assert_float{
         (
@@ -20,6 +20,12 @@ mod rectangle_tests{
             y: 0.0,
             width, height
         }
+    }
+    
+    fn positioned_cat(x: f64, y: f64) -> Cat {
+        let mut ret = Cat::new();
+        ret.position = Position{x, y};
+        ret
     }
     
     fn tree_depth(tree: &mut QuadTree<Cat>) -> usize {
