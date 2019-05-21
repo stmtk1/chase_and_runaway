@@ -2,7 +2,8 @@
 mod rectangle_tests{
     use quad_tree::{Rectangle, QuadTree, WIDTH_MIN};
     use consts::*;
-    use animal::Cat;
+    use animal::{Cat, Animal};
+    use pvector::PVector;
     
     macro_rules! assert_float{
         (
@@ -23,8 +24,7 @@ mod rectangle_tests{
     }
     
     fn positioned_cat(x: f64, y: f64) -> Cat {
-        let mut ret = Cat::new();
-        ret.position = Position{x, y};
+        let mut ret = Cat::new().set_position(&PVector{x, y});
         ret
     }
     
@@ -52,21 +52,18 @@ mod rectangle_tests{
     }
     
     #[test]
-    fn min_square_test(){
-        let rect = sized_rect(100.0, 200.0);
-        let Rectangle{ width, height, .. } = rect.min_square();
-        assert!(width < WIDTH_MIN);
-        assert!(WIDTH_MIN < 2.0 * width);
-        assert_float!(2.0, height / width);
+    fn new_tree_test(){
+        let rect = sized_rect(1000.0, 2000.0);
+        let tree = QuadTree::new_tree(&rect);
+        assert_eq!(tree_depth(&tree), 7);
+        let Rectangle{width, height, .. } = tree_minsq(&tree);
+        assert_float!(7.8125, width);
+        assert_float!(15.625, height);
     }
     
     #[test]
-    fn new_tree_test(){
+    fn append_test(){
         let rect = sized_rect(1000.0, 2000.0);
         let mut tree = QuadTree::new_tree(&rect);
-        assert_eq!(tree_depth(&mut tree), 7);
-        let Rectangle{width, height, .. } = tree_minsq(&mut tree);
-        assert_float!(7.8125, width);
-        assert_float!(15.625, height);
     }
 }

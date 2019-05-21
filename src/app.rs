@@ -10,7 +10,7 @@ use graphics::Transformed;
 use graphics::context::Context;
 use piston::event_loop::*;
 use piston::input::*;
-use quad_tree::{QuadTree, Rectangle};
+use quad_tree::QuadTree;
 
 // #[derive(Clone)]
 pub struct App {
@@ -176,8 +176,8 @@ impl App {
     pub fn update(&mut self)  -> bool {
         let cats = self.cats.clone();
         let rats = self.rats.clone();
-        self.cats = <Cat as Animal>::next_states(&cats, &rats);
-        self.rats = <Rat as Animal>::next_states(&cats, &rats);
+        self.cats = <Cat as Animal>::next_states(&cats, &self.cats_tree, &self.rats_tree);
+        self.rats = <Rat as Animal>::next_states(&rats, &self.cats_tree ,&self.rats_tree);
         self.cats_tree = QuadTree::new(&self.cats);
         self.rats_tree = QuadTree::new(&self.rats);
         App::is_finished(&self.rats)

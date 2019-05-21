@@ -4,6 +4,7 @@ use pvector::PVector;
 use consts::*;
 use animal::{Animal, Cat, Rat};
 use rand::prelude::*;
+use quad_tree::QuadTree;
 
 impl Animal for Cat {
     // 初期化
@@ -27,10 +28,10 @@ impl Animal for Cat {
     }
     
     // １フレーム後の状態を返す
-    fn next_states(cats: &Vec<Cat>, rats: &Vec<Rat>) -> Vec<Self> {
+    fn next_states(cats: &Vec<Self>, cats_tree: &QuadTree<Cat>, rats_tree: &QuadTree<Rat>) -> Vec<Self> {
         let ret: Vec<Cat> = cats
             .into_iter()
-            .map(|cat| cat.chase(cats, rats))
+            .map(|cat| cat.chase(cats_tree, rats_tree))
             .collect();
         <Cat as Animal>::life_manage(&ret)
     }
@@ -91,13 +92,21 @@ impl Animal for Cat {
     }
     
     // 一定半径以内にいる個体を集める
-    fn collect_near_pvectors<T: Animal>(&self, animals: &Vec<T>, radious: f64) -> Vec<T> {
+    fn collect_near_pvectors<T: Animal>(&self, animals: &QuadTree<T>, radious: f64) -> Vec<T> {
+        animals
+            .search(self, radious)
+            .into_iter()
+            .filter(|animal| !animal.is_same(self))
+            .map(|animal| animal.clone())
+            .collect()
+            /*
         animals
             .into_iter()
             .filter(|animal| animal.is_within(self, radious))
             .filter(|animal| !animal.is_same(self))
             .map(|animal| animal.clone())
             .collect()
+            */
     }
     
     // 相対位置の平均を計算
@@ -149,25 +158,25 @@ impl Animal for Cat {
 
 impl Cat{
     // 加速度ベクトルを計算し、速度ベクトルに足す
-    pub fn chase(&self, cats: &Vec<Cat>, rats: &Vec<Rat>) -> Cat{
+    pub fn chase(&self, cats_tree: &QuadTree<Cat>, rats_tree: &QuadTree<Rat>) -> Cat {
         let next_velocity = self
             .as_velocity()
-            .add(self.chase_vector(rats))
-            .add(self.separate_same(cats))
-            .add(self.align(cats))
-            .add(self.cohension(cats))
+            .add(self.chase_vector(rats_tree))
+            .add(self.separate_same(cats_tree))
+            .add(self.align(cats_tree))
+            .add(self.cohension(cats_tree))
             .normalize()
             .mult(self.velocity.len());
         
         self
             .apply_velocity(&next_velocity)
-            .eat(rats)
+            .eat(rats_tree)
             .move_self()
     }
     
     // 追いかける方向の計算
-    fn chase_vector(&self, rats: &Vec<Rat>) -> PVector {
-        let near_rats = self.collect_near_pvectors(rats, CHASE_RADIOUS);
+    fn chase_vector(&self, rats_tree: &QuadTree<Rat>) -> PVector {
+        let near_rats = self.collect_near_pvectors(rats_tree, CHASE_RADIOUS);
         
         if near_rats.len() <= 0 {
             return PVector::zero();
@@ -179,7 +188,7 @@ impl Cat{
     }
     
     // BOIDの個体同士を引き離す操作
-    fn separate_same(&self, cats: &Vec<Cat>) -> PVector {
+    fn separate_same(&self, cats: &QuadTree<Cat>) -> PVector {
         let near_animal = self.collect_near_pvectors(cats, SEPARATE_RADIOUS);
         
         if near_animal.len() <= 0 {
@@ -191,7 +200,7 @@ impl Cat{
     }
     
     // BOIDの整列処理
-    fn align(&self, cats: &Vec<Cat>) -> PVector{
+    fn align(&self, cats: &QuadTree<Cat>) -> PVector{
         let near_cats = self.collect_near_pvectors(cats, ALIGN_RADIOUS);
         
         if near_cats.len() <= 0 {
@@ -203,7 +212,7 @@ impl Cat{
     }
     
     // BOIDの個体が多い場所に行く操作
-    fn cohension(&self, same_kind: &Vec<Cat>) -> PVector {
+    fn cohension(&self, same_kind: &QuadTree<Cat>) -> PVector {
         let near_animals = self.collect_near_pvectors(same_kind, COHENSION_RADIOUS);
         
         if near_animals.len() <= 0 {
@@ -215,12 +224,15 @@ impl Cat{
     }
     
     // 一定半径以内にいるなら食べる
-    fn eat(&self, rats: &Vec<Rat>) -> Cat {
+    fn eat(&self, rats_tree: &QuadTree<Rat>) -> Cat {
         let mut ret = self.clone();
+        /*
         let can_eat = rats
             .into_iter()
             .any(|rat| self.is_within(rat, EATEN_RADIOUS));
-        if can_eat {
+            */
+        let eaten_cats = rats_tree.search(self, EATEN_RADIOUS);
+        if eaten_cats.len() > 0 {
             ret.energy += EAT_ENERGY;
             ret.ate += 1;
         }
@@ -282,5 +294,11 @@ impl Cat{
             .into_iter()
             .take(20)
             .collect()
+    }
+    
+    pub fn set_position(&self, position: &PVector) -> Cat{
+        let mut ret = self.clone();
+        ret.position = position.clone();
+        ret
     }
 }

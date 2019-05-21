@@ -189,19 +189,6 @@ impl Rectangle {
         }
     }
 
-    pub fn min_square(&self) -> Rectangle {
-        if self.width < WIDTH_MIN {
-            self.clone()
-        } else {
-            Rectangle {
-                x: self.x,
-                y: self.y,
-                width: self.width / 2.0,
-                height: self.height / 2.0
-            }
-                .min_square()
-        }
-    }
     
     pub fn whole_screen() -> Rectangle {
         Rectangle{

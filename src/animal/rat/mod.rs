@@ -4,6 +4,7 @@ use pvector::PVector;
 use animal::{Animal, Rat, Cat};
 use consts::*;
 use rand::prelude::*;
+use quad_tree::QuadTree;
 
 
 impl Animal for Rat {
@@ -23,11 +24,11 @@ impl Animal for Rat {
     }
 
     // 次のフレームの計算
-    fn next_states(cats: &Vec<Cat>, rats: &Vec<Rat>) -> Vec<Self> {
-        let alive_rats = Rat::delete_eaten(cats, rats);
+    fn next_states(rats: &Vec<Self>, cats_tree: &QuadTree<Cat>, rats_tree: &QuadTree<Rat>) -> Vec<Self> {
+        let alive_rats = Rat::delete_eaten(cats_tree, rats);
         let ret = alive_rats
             .into_iter()
-            .map(|rat| rat.run_away(cats))
+            .map(|rat| rat.run_away(cats_tree))
             .collect();
         <Rat as Animal>::life_manage(&ret)
     }
@@ -89,13 +90,21 @@ impl Animal for Rat {
     }
     
     // 近くにいる個体を集める
-    fn collect_near_pvectors<T: Animal>(&self, animals: &Vec<T>, radious: f64) -> Vec<T> {
+    fn collect_near_pvectors<T: Animal>(&self, animals: &QuadTree<T>, radious: f64) -> Vec<T> {
+        animals
+            .search(self, radious)
+            .into_iter()
+            .filter(|animal| !animal.is_same(self))
+            .map(|animal| animal.clone())
+            .collect()
+            /*
         animals
             .into_iter()
             .filter(|animal| animal.is_within(self, radious))
             .filter(|animal| !animal.is_same(self))
             .map(|animal| animal.clone())
             .collect()
+            */
     }
     
     // 相対位置の平均を計算
@@ -143,10 +152,10 @@ impl Animal for Rat {
 
 impl Rat {
     // 1個体の次の状態
-    fn run_away(&self, cats: &Vec<Cat>) -> Rat {
+    fn run_away(&self, cats_tree: &QuadTree<Cat>) -> Rat {
         let next_velocity = self
             .as_velocity()
-            .add(self.run_away_vector(cats))
+            .add(self.run_away_vector(cats_tree))
             .normalize()
             .mult(self.velocity.len());
         self
@@ -155,8 +164,8 @@ impl Rat {
     }
     
     // 逃げる方向をか速度ベクトルにする
-    fn run_away_vector(&self, cats: &Vec<Cat>) -> PVector {
-        let near_cats = self.collect_near_pvectors(cats, RUNAWAY_RADIOUS);
+    fn run_away_vector(&self, cats_tree: &QuadTree<Cat>) -> PVector {
+        let near_cats = self.collect_near_pvectors(cats_tree, RUNAWAY_RADIOUS);
         
         if near_cats.len() <= 0 {
             return PVector::zero();
@@ -168,17 +177,16 @@ impl Rat {
     }
     
     // 食べられているかどうかを判定
-    fn eaten(&self, cats: &Vec<Cat>) -> bool{
-        cats
-            .into_iter()
-            .any(|cat| self.is_within(cat, 1.0))
+    fn eaten(&self, cats_tree: &QuadTree<Cat>) -> bool{
+        cats_tree.search(self, 1.0).len() > 0
+            //.any(|cat| self.is_within(cat, 1.0))
     }
     
     // 食べられたらいなくなる
-    fn delete_eaten(cats: &Vec<Cat>, rats: &Vec<Rat>) -> Vec<Rat> {
+    fn delete_eaten(cats_tree: &QuadTree<Cat>, rats: &Vec<Rat>) -> Vec<Rat> {
         rats
             .into_iter()
-            .filter(|rat| !rat.eaten(cats))
+            .filter(|rat| !rat.eaten(cats_tree))
             .map(|rat| rat.clone())
             .collect()
     }
