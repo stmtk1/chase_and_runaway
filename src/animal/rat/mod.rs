@@ -24,7 +24,7 @@ impl Animal for Rat {
     }
 
     // 次のフレームの計算
-    fn next_states(rats: &Vec<Self>, cats_tree: &QuadTree<Cat>, rats_tree: &QuadTree<Rat>) -> Vec<Self> {
+    fn next_states(rats: &Vec<Self>, cats_tree: &QuadTree<Cat>, _rats_tree: &QuadTree<Rat>) -> Vec<Self> {
         let alive_rats = Rat::delete_eaten(cats_tree, rats);
         let ret = alive_rats
             .into_iter()

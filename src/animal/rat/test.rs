@@ -3,6 +3,7 @@ mod tests{
     use animal::{Animal, Cat, Rat};
     use consts::*;
     use pvector::PVector;
+    use quad_tree::QuadTree;
     
     fn setpos(animal: &mut Rat, pos: &PVector){
         animal.position = pos.clone();
@@ -173,7 +174,7 @@ mod tests{
         let dy = 0.8;
         let rat = <Rat as Animal>::new();
         let mut other = <Rat as Animal>::new();
-        let mut offset = PVector::new(dx, dy);
+        let offset = PVector::new(dx, dy);
         setpos(&mut other, &rat.position.add(offset));
         let mut arg = Vec::with_capacity(100);
         for _ in 0..100{
@@ -197,11 +198,12 @@ mod tests{
         for _ in 0..100{
             rats.push(other.clone());
         }
-        let expect_none = rat.collect_near_pvectors(&rats, 1.0);
+        let rats_tree = QuadTree::new(&rats);
+        let expect_none = rat.collect_near_pvectors(&rats_tree, 1.0);
         assert_eq!(expect_none.len(), 0);
         
         //全部一定半径内にいる場合 
-        let not_dicrease = rat.collect_near_pvectors(&rats, 2.0);
+        let not_dicrease = rat.collect_near_pvectors(&rats_tree, 2.0);
         assert!(not_dicrease.len() == 100);
     }
     
@@ -217,7 +219,8 @@ mod tests{
         for _ in 0..100 {
             cats.push(cat.clone());
         }
-        let result = rat.run_away_vector(&cats);
+        let cats_tree = QuadTree::new(&cats);
+        let result = rat.run_away_vector(&cats_tree);
         
         assert_float!(x, result.x);
         assert_float!(y, result.y);
@@ -225,7 +228,7 @@ mod tests{
         let not_chase_diff = CHASE_RADIOUS;
         setpos(&mut rat, &PVector::new(not_chase_diff, not_chase_diff).add(cat.position()));
         
-        let not_chase = rat.run_away_vector(&cats);
+        let not_chase = rat.run_away_vector(&cats_tree);
         assert_eq!(not_chase.x, 0.0);
         assert_eq!(not_chase.y, 0.0);
     }
@@ -236,12 +239,12 @@ mod tests{
         let cat = <Cat as Animal>::new();
         let eaten_diff = EATEN_RADIOUS / 2.0;
         setpos(&mut rat, &PVector::new(eaten_diff, eaten_diff).add(cat.position()));
-        let mut cats: Vec<Cat> = Vec::with_capacity(1);
-        cats.push(cat.clone());
+        let cats_tree = QuadTree::new(&vec![cat.clone()]);
+        assert!(rat.eaten(&cats_tree));
         
         let not_eaten_diff = EATEN_RADIOUS;
         setpos(&mut rat, &PVector::new(not_eaten_diff, not_eaten_diff).add(cat.position()));
-        assert!(!rat.eaten(&cats));
+        assert!(!rat.eaten(&cats_tree));
     }
     
     #[test]
@@ -249,14 +252,14 @@ mod tests{
         let mut rat = <Rat as Animal>::new();
         let cat = <Cat as Animal>::new();
         let eaten_diff = EATEN_RADIOUS / 2.0;
+        let cats_tree = QuadTree::new(&vec![cat.clone()]);
+        
         setpos(&mut rat, &PVector::new(eaten_diff, eaten_diff).add(cat.position()));
-        let mut cats: Vec<Cat> = Vec::with_capacity(1);
-        cats.push(cat.clone());
         let mut rats: Vec<Rat> = Vec::with_capacity(100);
         for _ in 0..100 {
             rats.push(rat.clone());
         }
-        assert_eq!(Rat::delete_eaten(&cats, &rats).len(), 0);
+        assert_eq!(Rat::delete_eaten(&cats_tree, &rats).len(), 0);
         
         let not_eaten_diff = EATEN_RADIOUS;
         setpos(&mut rat, &PVector::new(not_eaten_diff, not_eaten_diff).add(cat.position()));
@@ -265,6 +268,6 @@ mod tests{
             rats.push(rat.clone());
         }
         
-        assert_eq!(Rat::delete_eaten(&cats, &rats).len(), 100);
+        assert_eq!(Rat::delete_eaten(&cats_tree, &rats).len(), 100);
     }
 }

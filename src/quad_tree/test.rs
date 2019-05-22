@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod rectangle_tests{
-    use quad_tree::{Rectangle, QuadTree, WIDTH_MIN};
+    use quad_tree::{Rectangle, QuadTree};
     use consts::*;
     use animal::{Cat, Animal};
     use pvector::PVector;
@@ -24,21 +24,21 @@ mod rectangle_tests{
     }
     
     fn positioned_cat(x: f64, y: f64) -> Cat {
-        let mut ret = Cat::new().set_position(&PVector{x, y});
+        let ret = Cat::new().set_position(&PVector{x, y});
         ret
     }
     
-    fn tree_depth(tree: &mut QuadTree<Cat>) -> usize {
-        if let Some(ref mut children) = tree.children {
-            tree_depth(&mut children[0].borrow_mut()) + 1
+    fn tree_depth(tree: &QuadTree<Cat>) -> usize {
+        if let Some(ref children) = tree.children {
+            tree_depth(&children[0].borrow_mut()) + 1
         } else {
             0
         }
     }
     
-    fn tree_minsq(tree: &mut QuadTree<Cat>) -> Rectangle {
-        if let Some(ref mut children) = tree.children {
-            tree_minsq(&mut children[0].borrow_mut())
+    fn tree_minsq(tree: &QuadTree<Cat>) -> Rectangle {
+        if let Some(ref children) = tree.children {
+            tree_minsq(&children[0].borrow_mut())
         } else {
            tree.rectangle.clone()
         }
@@ -65,5 +65,7 @@ mod rectangle_tests{
     fn append_test(){
         let rect = sized_rect(1000.0, 2000.0);
         let mut tree = QuadTree::new_tree(&rect);
+        let cat = positioned_cat(5.0, 10.0);
+        tree.append(&cat);
     }
 }

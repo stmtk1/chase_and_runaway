@@ -3,6 +3,7 @@ mod tests{
     use animal::{Animal, Cat, Rat};
     use consts::*;
     use pvector::PVector;
+    use quad_tree::QuadTree;
     
     macro_rules! assert_float{
         (
@@ -194,11 +195,12 @@ mod tests{
         for _ in 0..100{
             cats.push(other.clone());
         }
-        let expect_none = cat.collect_near_pvectors(&cats, 1.0);
+        let cats_tree = QuadTree::new(&cats);
+        let expect_none = cat.collect_near_pvectors(&cats_tree, 1.0);
         assert_eq!(expect_none.len(), 0);
         
         //全部一定半径内にいる場合 
-        let not_dicrease = cat.collect_near_pvectors(&cats, 2.0);
+        let not_dicrease = cat.collect_near_pvectors(&cats_tree, 2.0);
         assert!(not_dicrease.len() == 100);
     }
     
@@ -230,7 +232,8 @@ mod tests{
         for _ in 0..100 {
             eaten.push(rat.clone());
         }
-        let result = cat.eat(&eaten);
+        let eaten_tree = QuadTree::new(&eaten);
+        let result = cat.eat(&eaten_tree);
         assert_eq!(cat.energy + EAT_ENERGY, result.energy);
         assert_eq!(result.ate, 1);
         
@@ -238,7 +241,7 @@ mod tests{
         offset = PVector::new(not_eat_diff, not_eat_diff);
         setpos(&mut cat, &rat.position.add(offset));
         
-        let not_eat = cat.eat(&eaten);
+        let not_eat = cat.eat(&eaten_tree);
         assert_eq!(cat.energy, not_eat.energy);
         assert_eq!(not_eat.ate, 0);
     }
@@ -256,7 +259,8 @@ mod tests{
         for _ in 0..100 {
             chased.push(rat.clone());
         }
-        let result = cat.chase_vector(&chased);
+        let chased_tree = QuadTree::new(&chased);
+        let result = cat.chase_vector(&chased_tree);
         
         assert_float!(dx * cat.chase_weight, result.x);
         assert_float!(dy * cat.chase_weight, result.y);
@@ -265,7 +269,7 @@ mod tests{
         offset = PVector::new(-0.6 * not_chase_diff, -0.8 * not_chase_diff);
         setpos(&mut cat, &rat.position().add(offset));
         
-        let not_chase = cat.chase_vector(&chased);
+        let not_chase = cat.chase_vector(&chased_tree);
         assert_eq!(not_chase.x, 0.0);
         assert_eq!(not_chase.y, 0.0);
     }
@@ -282,7 +286,8 @@ mod tests{
         for _ in 0..100 {
             others.push(other.clone());
         }
-        let result = cat.separate_same(&others);
+        let others_tree = QuadTree::new(&others);
+        let result = cat.separate_same(&others_tree);
         
         assert_float!(x * cat.separate_weight, result.x);
         assert_float!(y * cat.separate_weight, result.y);
@@ -290,7 +295,7 @@ mod tests{
         let not_separate_diff = SEPARATE_RADIOUS;
         setpos(&mut cat, &PVector::new(not_separate_diff, not_separate_diff).add(other.position()));
         
-        let not_separate = cat.separate_same(&others);
+        let not_separate = cat.separate_same(&others_tree);
         assert_eq!(not_separate.x, 0.0);
         assert_eq!(not_separate.y, 0.0);
     }
@@ -307,7 +312,8 @@ mod tests{
         for _ in 0..100 {
             others.push(other.clone());
         }
-        let result = cat.align(&others);
+        let others_tree = QuadTree::new(&others);
+        let result = cat.align(&others_tree);
         
         assert_float!(x * cat.align_weight, result.x);
         assert_float!(y * cat.align_weight, result.y);
@@ -315,7 +321,7 @@ mod tests{
         let not_align_diff = ALIGN_RADIOUS;
         setpos(&mut cat, &PVector::new(-not_align_diff, -not_align_diff).add(other.position()));
         
-        let not_align = cat.align(&others);
+        let not_align = cat.align(&others_tree);
         assert_eq!(not_align.x, 0.0);
         assert_eq!(not_align.y, 0.0);
     }
@@ -332,7 +338,8 @@ mod tests{
         for _ in 0..100 {
             others.push(other.clone());
         }
-        let result = cat.cohension(&others);
+        let others_tree = QuadTree::new(&others);
+        let result = cat.cohension(&others_tree);
         
         assert_float!(x * cat.cohension_weight, result.x);
         assert_float!(y * cat.cohension_weight, result.y);
@@ -340,7 +347,7 @@ mod tests{
         let not_cohension_diff = COHENSION_RADIOUS;
         setpos(&mut cat, &PVector::new(-not_cohension_diff, -not_cohension_diff).add(other.position()));
         
-        let not_cohension = cat.cohension(&others);
+        let not_cohension = cat.cohension(&others_tree);
         assert_eq!(not_cohension.x, 0.0);
         assert_eq!(not_cohension.y, 0.0);
     }

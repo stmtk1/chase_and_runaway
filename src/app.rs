@@ -31,7 +31,6 @@ impl App {
     pub fn new() -> App {
         let opengl = OpenGL::V3_2;
         let window = App::new_window(opengl);
-        let tree = QuadTree::new(&App::new_rats());
         let cats = App::new_cats();
         let rats = App::new_rats();
         let cats_tree = QuadTree::new(&cats);
