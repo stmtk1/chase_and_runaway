@@ -4,6 +4,7 @@ mod rectangle_tests{
     use consts::*;
     use animal::{Cat, Animal};
     use pvector::PVector;
+    use std::collections::LinkedList;
     
     macro_rules! assert_float{
         (
@@ -12,6 +13,19 @@ mod rectangle_tests{
             {
                 assert!((($x - $y) / $x).abs() < 1.0e-9);
             }
+        }
+    }
+    
+    fn get_all_animals(tree: &QuadTree<Cat>) -> LinkedList<Cat> {
+        if let Some(ref children) = tree.children {
+            let mut ret = LinkedList::new();
+            for child in children {
+                let mut animals = get_all_animals(&child.borrow());
+                ret.append(&mut animals);
+            }
+            ret
+        } else {
+            tree.animals.clone().unwrap()
         }
     }
     
@@ -44,6 +58,36 @@ mod rectangle_tests{
         }
     }
     
+    fn tree_parse(tree: &QuadTree<Cat>) {
+        if let Some(ref children) = tree.children {
+            if let Some(_) = tree.animals {
+                panic!("Both Variables have value!");
+            }
+            for child in children {
+                let child_tree = &child.borrow();
+                tree_parse(child_tree);
+            }
+        } else {
+            match tree.animals {
+                None => panic!("Nor Variable have value!"),
+                _ => ()
+            }
+        }
+    }
+    
+    fn tree_animals_size(tree: &QuadTree<Cat>, index: usize) -> usize {
+        if let Some(ref children) = tree.children {
+            tree_animals_size(&children[index].borrow(), index)
+        } else {
+            match tree.animals.clone() {
+                Some(animals) => { 
+                    animals.len() 
+                },
+                _ => 1939291 // random number
+            }
+        }
+    }
+    
     #[test]
     fn whole_screen_test(){
         let Rectangle{ width, height, .. } = Rectangle::whole_screen();
@@ -62,10 +106,100 @@ mod rectangle_tests{
     }
     
     #[test]
-    fn append_test(){
+    fn new_tree_child_test(){
+        tree_parse(&QuadTree::new_tree(&sized_rect(1000.0, 2000.0)));
+    }
+    
+    #[test]
+    fn append_test_left_up(){
         let rect = sized_rect(1000.0, 2000.0);
         let mut tree = QuadTree::new_tree(&rect);
         let cat = positioned_cat(5.0, 10.0);
-        tree.append(&cat);
+        
+        for _ in 0..10 {
+            tree.append(&cat);
+        }
+        assert_eq!(tree_animals_size(&tree, 0), 10);
+        assert_eq!(tree_animals_size(&tree, 1), 0);
+        assert_eq!(tree_animals_size(&tree, 2), 0);
+        assert_eq!(tree_animals_size(&tree, 3), 0);
     }
+    
+    #[test]
+    fn append_test_right_up(){
+        let rect = sized_rect(1000.0, 2000.0);
+        let mut tree = QuadTree::new_tree(&rect);
+        let cat = positioned_cat(995.0, 10.0);
+        
+        for _ in 0..10 {
+            tree.append(&cat);
+        }
+        assert_eq!(tree_animals_size(&tree, 0), 0);
+        assert_eq!(tree_animals_size(&tree, 1), 10);
+        assert_eq!(tree_animals_size(&tree, 2), 0);
+        assert_eq!(tree_animals_size(&tree, 3), 0);
+    }
+    
+    #[test]
+    fn append_test_left_down(){
+        let rect = sized_rect(1000.0, 2000.0);
+        let mut tree = QuadTree::new_tree(&rect);
+        let cat = positioned_cat(5.0, 1990.0);
+        
+        for _ in 0..10 {
+            tree.append(&cat);
+        }
+        assert_eq!(tree_animals_size(&tree, 0), 0);
+        assert_eq!(tree_animals_size(&tree, 1), 0);
+        assert_eq!(tree_animals_size(&tree, 2), 10);
+        assert_eq!(tree_animals_size(&tree, 3), 0);
+    }
+    
+    #[test]
+    fn append_test_right_down(){
+        let rect = sized_rect(1000.0, 2000.0);
+        let mut tree = QuadTree::new_tree(&rect);
+        let cat = positioned_cat(995.0, 1990.0);
+        
+        for _ in 0..10 {
+            tree.append(&cat);
+        }
+        assert_eq!(tree_animals_size(&tree, 0), 0);
+        assert_eq!(tree_animals_size(&tree, 1), 0);
+        assert_eq!(tree_animals_size(&tree, 2), 0);
+        assert_eq!(tree_animals_size(&tree, 3), 10);
+    }
+    
+    #[test]
+    fn new_test(){
+        let mut animals = Vec::with_capacity(128 * 128);
+        let width = 5.0;
+        let height = 3.75;
+        for i in 0..128 {
+            for j in 0..128 {
+                animals.push(positioned_cat((i as f64 + 0.5) * width, (j as f64 + 0.5) * height));
+            } 
+        } 
+        let tree = QuadTree::new(&animals);
+        let animals = get_all_animals(&tree);
+        assert_eq!(animals.len(), 128 * 128);
+    }
+    
+    /*
+     * TODO テストに通す
+    #[test]
+    fn new_corner_test(){
+        let mut animals = Vec::with_capacity(129 * 129);
+        let width = 5.0;
+        let height = 3.75;
+        for i in 0..129 {
+            for j in 0..129 {
+                animals.push(positioned_cat((i as f64) * width, (j as f64) * height));
+            } 
+        } 
+        let tree = QuadTree::new(&animals);
+        let animals = get_all_animals(&tree);
+        assert_eq!(animals.len(), 129 * 129);
+    }
+    */
 }
