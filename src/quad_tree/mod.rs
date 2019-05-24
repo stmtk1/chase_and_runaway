@@ -72,6 +72,18 @@ impl<T: Animal> QuadTree<T> {
         }
     }
     
+    pub fn remove(&mut self, animal: &T) {
+        if let Some(ref mut children) = self.children {
+            for child in children {
+                let mut tree = child.borrow_mut();
+                if tree.rectangle.is_inside(animal) {
+                    tree.remove(animal);
+                    break;
+                }
+            }
+        }
+    }
+    
     pub fn new(animals: &Vec<T>) -> QuadTree<T> {
         let mut tree = QuadTree::new_tree(&Rectangle::whole_screen());
         for animal in animals {
@@ -105,22 +117,8 @@ impl<T: Animal> QuadTree<T> {
             panic!("both none");
         }
     }
-    
-    fn insert(&mut self, target: &T){
-        if let Some(mut animals) = self.animals.clone() {
-            animals.push_back(target.clone());
-            self.animals = Some(animals);
-        } else if let Some(ref mut children) = self.children {
-            for child in children {
-                let mut tree = child.borrow_mut();
-                if tree.rectangle.is_inside(target) {
-                    tree.insert(target);
-                }
-            }
-        }
-    }
 }
-
+    
 impl Rectangle {
     fn child(&self, num: u8) -> Rectangle{
         let x = if num % 2 == 0 {
@@ -188,7 +186,6 @@ impl Rectangle {
                 .fold(WIDTH + 100.0, |a, b| if a < b { a } else { b })
         }
     }
-
     
     pub fn whole_screen() -> Rectangle {
         Rectangle{
@@ -198,5 +195,4 @@ impl Rectangle {
             height: HEIGHT,
         }
     }
-    
 }
