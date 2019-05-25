@@ -202,4 +202,40 @@ mod rectangle_tests{
         assert_eq!(animals.len(), 129 * 129);
     }
     */
+    
+    #[test]
+    fn remove_center_test(){
+        let mut animals = Vec::with_capacity(128 * 128);
+        let width = 5.0;
+        let height = 3.75;
+        for i in 0..128 {
+            for j in 0..128 {
+                animals.push(positioned_cat((i as f64 + 0.5) * width, (j as f64 + 0.5) * height));
+            } 
+        }
+        let mut tree = QuadTree::new(&animals);
+        for cat in &animals {
+            tree.remove(cat);
+        }
+        let animals = get_all_animals(&tree);
+        assert_eq!(animals.len(), 0);
+    }
+    
+    #[test]
+    fn remove_corner_test(){
+        let mut animals = Vec::with_capacity(129 * 129);
+        let width = 5.0;
+        let height = 3.75;
+        for i in 0..129 {
+            for j in 0..129 {
+                animals.push(positioned_cat((i as f64) * width, (j as f64) * height));
+            } 
+        }
+        let mut tree = QuadTree::new(&animals);
+        for cat in &animals {
+            tree.remove(cat);
+        }
+        let animals = get_all_animals(&tree);
+        assert_eq!(animals.len(), 0);
+    }
 }

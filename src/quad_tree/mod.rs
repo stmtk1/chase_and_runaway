@@ -81,6 +81,14 @@ impl<T: Animal> QuadTree<T> {
                     break;
                 }
             }
+        } else {
+            let animals = self.animals
+                .clone()
+                .unwrap()
+                .into_iter()
+                .filter(|other| !animal.is_same(other))
+                .collect();
+            self.animals = Some(animals);
         }
     }
     
