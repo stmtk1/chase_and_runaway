@@ -99,14 +99,6 @@ impl Animal for Cat {
             .filter(|animal| !animal.is_same(self))
             .map(|animal| animal.clone())
             .collect()
-            /*
-        animals
-            .into_iter()
-            .filter(|animal| animal.is_within(self, radious))
-            .filter(|animal| !animal.is_same(self))
-            .map(|animal| animal.clone())
-            .collect()
-            */
     }
     
     // 相対位置の平均を計算
@@ -171,7 +163,7 @@ impl Cat{
         self
             .apply_velocity(&next_velocity)
             .eat(rats_tree)
-            .move_self()
+            //.move_self()
     }
     
     // 追いかける方向の計算
@@ -226,11 +218,6 @@ impl Cat{
     // 一定半径以内にいるなら食べる
     fn eat(&self, rats_tree: &QuadTree<Rat>) -> Cat {
         let mut ret = self.clone();
-        /*
-        let can_eat = rats
-            .into_iter()
-            .any(|rat| self.is_within(rat, EATEN_RADIOUS));
-            */
         let eaten_cats = rats_tree.search(self, EATEN_RADIOUS);
         if eaten_cats.len() > 0 {
             ret.energy += EAT_ENERGY;

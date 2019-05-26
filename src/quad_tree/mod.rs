@@ -7,7 +7,7 @@ use std::collections::LinkedList;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-const WIDTH_MIN: f64 = 10.0;
+const WIDTH_LIMIT: f64 = 10.0;
 
 fn min(a: f64, b: f64) -> f64 {
     if a < b {
@@ -34,7 +34,7 @@ pub struct QuadTree<T: Animal> {
 
 impl<T: Animal> QuadTree<T> {
     fn new_tree(rect: &Rectangle) -> QuadTree<T> {
-        if rect.width >= WIDTH_MIN {
+        if rect.width >= WIDTH_LIMIT {
             let mut children: Vec<Rc<RefCell<QuadTree<T>>>> = Vec::with_capacity(4);
             for n in 0..4 {
                 children.push(QuadTree::optimize(rect.child(n)));
@@ -63,7 +63,7 @@ impl<T: Animal> QuadTree<T> {
         } else if let Some(ref mut children) = self.children {
             for child in children {
                 let mut tree = child.borrow_mut();
-                if tree.rectangle.is_inside(animal) {
+                if tree.rectangle.is_inside(&animal.position()) {
                     tree.append(animal);
                 }
             }
@@ -76,7 +76,7 @@ impl<T: Animal> QuadTree<T> {
         if let Some(ref mut children) = self.children {
             for child in children {
                 let mut tree = child.borrow_mut();
-                if tree.rectangle.is_inside(animal) {
+                if tree.rectangle.is_inside(&animal.position()) {
                     tree.remove(animal);
                     break;
                 }
@@ -146,12 +146,12 @@ impl Rectangle {
         }
     }
     
-    fn is_inside<T: Animal>(&self, animal: &T) -> bool{
-        let PVector{x, y} = animal.position();
-        self.x < x 
-            && x < self.x + self.width
-            && self.y < y
-            && y < self.y + self.height
+    fn is_inside(&self, vector: &PVector) -> bool{
+        let PVector{x, y} = vector;
+        self.x < *x 
+            && *x < self.x + self.width
+            && self.y < *y
+            && *y < self.y + self.height
     }
 
     fn point(&self, n: u8) -> PVector{
@@ -202,5 +202,42 @@ impl Rectangle {
             width: WIDTH,
             height: HEIGHT,
         }
+    }
+    pub fn min_rectangle(&self) -> Rectangle {
+        Rectangle::whole_screen().split_rectangle()
+    }
+    
+    fn split_rectangle(&self) -> Rectangle {
+        if self.width < WIDTH_LIMIT {
+            self.clone()
+        } else {
+            Rectangle {
+                width: self.width / 2.0,
+                height: self.height / 2.0,
+                x: self.x,
+                y: self.y,
+            }
+        }
+    }
+    
+    pub fn is_move_tree<T: Animal>(&self, animal: &T) -> bool {
+        self.get_index(&animal.position()) == self.get_index(&animal.position().add(animal.as_velocity()))
+    }
+    
+    fn get_index(&self, vector: &PVector) -> (usize, usize) {
+        if self.width < WIDTH_LIMIT {
+            return (0, 0);
+        }
+        
+        for i in 0..4 {
+            let rect = self.child(i);
+            if rect.is_inside(vector) {
+                let (width, height) = rect.get_index(vector);
+                let new_width = if i % 2 == 0 { 0 } else { 1 } * width;
+                let new_height = if i / 2 == 0 { 0 } else { 1 } * height;
+                return (new_width, new_height);
+            }
+        }
+        panic!("can not find index");
     }
 }

@@ -4,7 +4,7 @@ use pvector::PVector;
 use animal::{Animal, Rat, Cat};
 use consts::*;
 use rand::prelude::*;
-use quad_tree::QuadTree;
+use quad_tree::{QuadTree, Rectangle};
 
 
 impl Animal for Rat {
@@ -22,7 +22,7 @@ impl Animal for Rat {
             id: rng.gen::<u64>(),
         }
     }
-
+    
     // 次のフレームの計算
     fn next_states(rats: &Vec<Self>, cats_tree: &QuadTree<Cat>, _rats_tree: &QuadTree<Rat>) -> Vec<Self> {
         let alive_rats = Rat::delete_eaten(cats_tree, rats);
@@ -97,14 +97,6 @@ impl Animal for Rat {
             .filter(|animal| !animal.is_same(self))
             .map(|animal| animal.clone())
             .collect()
-            /*
-        animals
-            .into_iter()
-            .filter(|animal| animal.is_within(self, radious))
-            .filter(|animal| !animal.is_same(self))
-            .map(|animal| animal.clone())
-            .collect()
-            */
     }
     
     // 相対位置の平均を計算
@@ -160,7 +152,7 @@ impl Rat {
             .mult(self.velocity.len());
         self
             .apply_velocity(&next_velocity)
-            .move_self()
+            //.move_self()
     }
     
     // 逃げる方向をか速度ベクトルにする
