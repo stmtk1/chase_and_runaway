@@ -238,4 +238,67 @@ mod rectangle_tests{
         let animals = get_all_animals(&tree);
         assert_eq!(animals.len(), 0);
     }
+    
+    #[test]
+    fn get_index_test(){
+        let vector = PVector {
+            x: 0.0 * 5.0 + 2.5,
+            y: 0.0 * 3.75 + 1.0,
+        };
+        let rect = Rectangle::whole_screen();
+        assert_eq!((0, 0), rect.get_index((0, 0), &vector));
+    }
+    
+    #[test]
+    fn get_index_test2(){
+        let vector = PVector {
+            x: 127.0 * 5.0 + 2.5,
+            y: 127.0 * 3.75 + 1.0,
+        };
+        let rect = Rectangle::whole_screen();
+        assert_eq!((127, 127), rect.get_index((0, 0), &vector));
+    }
+    
+    #[test]
+    fn get_index_test3(){
+        let vector = PVector {
+            x: 0.0 * 5.0 + 2.5,
+            y: 127.0 * 3.75 + 1.0,
+        };
+        let rect = Rectangle::whole_screen();
+        assert_eq!((0, 127), rect.get_index((0, 0), &vector));
+    }
+    
+    #[test]
+    fn get_index_test4(){
+        let vector = PVector {
+            x: 127.0 * 5.0 + 2.5,
+            y: 0.0 * 3.75 + 1.0,
+        };
+        let rect = Rectangle::whole_screen();
+        assert_eq!((127, 0), rect.get_index((0, 0), &vector));
+    }
+    
+    #[test]
+    fn get_index_test5(){
+        let vector = PVector {
+            x: 51.0 * 5.0 + 2.5,
+            y: 112.0 * 3.75 + 1.0,
+        };
+        let rect = Rectangle::whole_screen();
+        assert_eq!((51, 112), rect.get_index((0, 0), &vector));
+    }
+    
+    #[test]
+    fn is_move_tree_test() {
+        let x = 78;
+        let y = 67;
+        let origin_cat = positioned_cat((x as f64 + 0.5) * 5.0, (y as f64 + 0.5) * 3.75);
+        let tree = QuadTree::new(&Vec::new());
+        assert!(!tree.is_move_tree(&origin_cat.apply_velocity(&PVector{ x: 0.0, y: 0.0 })));
+        for i in 0..8 {
+            let vec = PVector {x: (i as f64 * 45.0).cos() * 5.0, y: (i as f64 * 45.0).sin() * 3.75 };
+            assert!(tree.is_move_tree(&origin_cat.apply_velocity(&vec)));
+        }
+    }
 }

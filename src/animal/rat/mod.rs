@@ -55,7 +55,6 @@ impl Animal for Rat {
             new_pos.y += HEIGHT;
         }
         
-        //ret.energy -= 1;
         ret.position = new_pos;
         ret
     }
@@ -171,7 +170,6 @@ impl Rat {
     // 食べられているかどうかを判定
     fn eaten(&self, cats_tree: &QuadTree<Cat>) -> bool{
         cats_tree.search(self, 1.0).len() > 0
-            //.any(|cat| self.is_within(cat, 1.0))
     }
     
     // 食べられたらいなくなる

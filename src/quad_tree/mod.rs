@@ -125,6 +125,11 @@ impl<T: Animal> QuadTree<T> {
             panic!("both none");
         }
     }
+    
+    pub fn is_move_tree(&self, animal: &T) -> bool {
+        self.rectangle.get_index((0, 0), &animal.position()) !=
+            self.rectangle.get_index((0, 0), &animal.move_self().position())
+    }
 }
     
 impl Rectangle {
@@ -220,22 +225,19 @@ impl Rectangle {
         }
     }
     
-    pub fn is_move_tree<T: Animal>(&self, animal: &T) -> bool {
-        self.get_index(&animal.position()) == self.get_index(&animal.position().add(animal.as_velocity()))
-    }
     
-    fn get_index(&self, vector: &PVector) -> (usize, usize) {
+    fn get_index(&self, index: (usize, usize), vector: &PVector) -> (usize, usize) {
+        println!("{:?}", index);
         if self.width < WIDTH_LIMIT {
-            return (0, 0);
+            return index;
         }
         
         for i in 0..4 {
-            let rect = self.child(i);
-            if rect.is_inside(vector) {
-                let (width, height) = rect.get_index(vector);
-                let new_width = if i % 2 == 0 { 0 } else { 1 } * width;
-                let new_height = if i / 2 == 0 { 0 } else { 1 } * height;
-                return (new_width, new_height);
+            if self.child(i).is_inside(vector) {
+                let (x, y) = index;
+                let new_x = if i % 2 == 0 { 0 } else { 1 } + x * 2;
+                let new_y = if i / 2 == 0 { 0 } else { 1 } + y * 2;
+                return self.child(i).get_index((new_x, new_y), vector);
             }
         }
         panic!("can not find index");
